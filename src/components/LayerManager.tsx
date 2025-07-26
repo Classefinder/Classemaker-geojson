@@ -33,27 +33,73 @@ const LayerManager: React.FC<LayerManagerProps> = ({
   const [showExportModal, setShowExportModal] = useState(false);
 
   const handleExportItinerary = (layerAttributes: Record<string, number>) => {
-    const features = layers
-      .filter(layer => layer.info.category === 'chemin')
-      .flatMap(layer =>
-        (layer.data.features || []).map(feature => ({
-          ...feature,
-          properties: {
-            ...feature.properties,
-            foot: 'yes',
-            etage: layerAttributes[layer.info.id],
-          },
-        }))
-      );
-    const combinedGeoJson = {
-      type: 'FeatureCollection',
-      features,
-    };
-    const blob = new Blob([JSON.stringify(combinedGeoJson, null, 2)], { type: 'application/json' });
+    // Récupère tous les features des calques 'chemin'
+    const cheminLayers = layers.filter(layer => layer.info.category === 'chemin');
+    let nodeId = -1;
+    let wayId = -1;
+    const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string|number> }[] = [];
+    const ways: { id: number; nodeRefs: number[]; tags: Record<string, string|number> }[] = [];
+    const nodeMap = new Map<string, number>(); // key: 'lat,lon' => nodeId
+
+    cheminLayers.forEach(layer => {
+      const etage = layerAttributes[layer.info.id];
+      (layer.data.features || []).forEach(feature => {
+        if (feature.geometry.type === 'LineString') {
+          const coords = feature.geometry.coordinates as [number, number][];
+          const nodeRefs: number[] = [];
+          coords.forEach(([lon, lat]) => {
+            const key = `${lat},${lon}`;
+            let id;
+            if (nodeMap.has(key)) {
+              id = nodeMap.get(key)!;
+            } else {
+              id = nodeId--;
+              nodeMap.set(key, id);
+              nodes.push({ id, lat, lon });
+            }
+            nodeRefs.push(id);
+          });
+          // Ajoute le way
+          ways.push({
+            id: wayId--,
+            nodeRefs,
+            tags: {
+              foot: 'yes',
+              etage,
+              ...(feature.properties || {})
+            }
+          });
+        }
+        // On pourrait ajouter la gestion des Points ou Polygones si besoin
+      });
+    });
+
+    // Génère le XML OSM
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<osm version="0.6" generator="ClassefinderGeoJSONMaker">\n`;
+    nodes.forEach(node => {
+      xml += `<node id=\"${node.id}\" lat=\"${node.lat}\" lon=\"${node.lon}\" />\n`;
+    });
+    ways.forEach(way => {
+      xml += `<way id=\"${way.id}\">\n`;
+      way.nodeRefs.forEach(ref => {
+        xml += `  <nd ref=\"${ref}\" />\n`;
+      });
+      Object.entries(way.tags).forEach(([k, v]) => {
+        if (k !== 'name') // on peut filtrer certains tags si besoin
+          xml += `  <tag k=\"${k}\" v=\"${v}\" />\n`;
+      });
+      if (way.tags.name) {
+        xml += `  <tag k=\"name\" v=\"${way.tags.name}\" />\n`;
+      }
+      xml += `</way>\n`;
+    });
+    xml += `</osm>`;
+
+    const blob = new Blob([xml], { type: 'text/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'itinerary.geojson';
+    a.download = 'itinerary.osm';
     a.click();
     URL.revokeObjectURL(url);
   };
