@@ -194,6 +194,7 @@ function App() {
               active={activeLayerId === l.info.id}
               visible={l.info.visible}
               onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
+              allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
             />
           ))}
         </MapContainer>
