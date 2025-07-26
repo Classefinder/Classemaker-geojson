@@ -3,7 +3,7 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import { v4 as uuidv4 } from 'uuid';
 import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
 import LayerManager from './components/LayerManager';
-import type { LayerInfo } from './components/LayerManager';
+import type { LayerInfo, LayerCategory } from './components/LayerManager';
 import AttributeEditor from './components/AttributeEditor';
 import FeatureNameList from './components/FeatureNameList';
 import DistortableImageList from './components/DistortableImageList';
@@ -22,7 +22,7 @@ function App() {
   const initialLayerId = uuidv4();
   const [layers, setLayers] = useState<LayerData[]>([
     {
-      info: { id: initialLayerId, name: 'Calque 1', visible: true },
+      info: { id: initialLayerId, name: 'Salle 1', visible: true, category: 'salles' },
       data: { type: 'FeatureCollection', features: [] },
     },
   ]);
@@ -69,11 +69,11 @@ function App() {
   const closeAttributeEditor = () => setSelectedFeature(null);
 
   // Gestion des calques
-  const addLayer = () => {
-    const name = prompt('Nom du nouveau calque ?') || `Calque ${layers.length + 1}`;
+  const addLayer = (category: LayerCategory) => {
+    const name = prompt(`Nom du nouveau ${category === 'salles' ? 'salle' : 'chemin'} ?`) || `${category === 'salles' ? 'Salle' : 'Chemin'} ${layers.filter(l => l.info.category === category).length + 1}`;
     const newId = uuidv4();
     const newLayer: LayerData = {
-      info: { id: newId, name, visible: true },
+      info: { id: newId, name, visible: true, category },
       data: { type: 'FeatureCollection', features: [] },
     };
     setLayers([...layers, newLayer]);
@@ -135,40 +135,48 @@ function App() {
           onToggleLayer={toggleLayer}
           onSelectLayer={selectLayer}
         />
-        <div style={{ marginTop: 16 }}>
-          {layers.map(l => (
-            <button key={l.info.id} onClick={() => exportLayer(l.info.id)} style={{ width: '100%', marginBottom: 4 }}>
-              Exporter {l.info.name}
-            </button>
-          ))}
-        </div>
-        {/* Chargement et gestion des images de fond (DistortableImage) */}
-        <div style={{ marginTop: 16 }}>
-          <label style={{ display: 'block', marginBottom: 4 }}>Ajouter une image de fond (PNG/JPG) :</label>
+        {/* Images de fond */}
+        <div style={{ marginTop: 10 }}>
+          <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Images de fond :</label>
           <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
           {imagesFond.length > 0 && (
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 6 }}>
               {imagesFond.map(img => (
                 <div key={img.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{img.url.split('/').pop()}</span>
-                  <button onClick={() => toggleImageFond(img.id)} style={{ marginLeft: 8 }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 13 }}>{img.url.split('/').pop()}</span>
+                  <button onClick={() => toggleImageFond(img.id)} style={{ marginLeft: 6, fontSize: 13 }}>
                     {img.visible ? 'Cacher' : 'Afficher'}
                   </button>
-                  <button onClick={() => removeImageFond(img.id)} style={{ marginLeft: 8, color: 'red' }}>🗑️</button>
+                  <button onClick={() => removeImageFond(img.id)} style={{ marginLeft: 6, color: 'red', fontSize: 13 }}>🗑️</button>
                 </div>
               ))}
             </div>
           )}
         </div>
-        {/* Onglet/liste des noms d'entités */}
-        <FeatureNameList
-          layers={layers.map(l => ({
-            info: l.info,
-            data: l.data,
-            onUpdateName: (featureIdx: number, newName: string) => updateFeatureName(l.info.id, featureIdx, newName),
-            onSelectFeature: (featureIdx: number) => setSelectedFeature({ layerId: l.info.id, featureIdx }),
-          }))}
-        />
+        {/* Attributs des calques visibles */}
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontWeight: 500, marginBottom: 2 }}>Attributs des calques visibles :</div>
+          {layers.filter(l => l.info.visible).map(l => (
+            <FeatureNameList
+              key={l.info.id}
+              layers={[{
+                info: l.info,
+                data: l.data,
+                onUpdateName: (featureIdx: number, newName: string) => updateFeatureName(l.info.id, featureIdx, newName),
+                onSelectFeature: (featureIdx: number) => setSelectedFeature({ layerId: l.info.id, featureIdx }),
+              }]}
+            />
+          ))}
+        </div>
+        {/* Boutons d'export */}
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontWeight: 500, marginBottom: 2 }}>Export GeoJSON :</div>
+          {layers.map(l => (
+            <button key={l.info.id} onClick={() => exportLayer(l.info.id)} style={{ width: '100%', marginBottom: 4, fontSize: 13 }}>
+              Exporter {l.info.name}
+            </button>
+          ))}
+        </div>
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <h1 style={{ textAlign: 'center', margin: 0, padding: 10 }}>Mini QGIS Web (React + Leaflet)</h1>
