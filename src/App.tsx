@@ -12,11 +12,10 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
 
-type LayerData = {
+export type LayerData = {
   info: LayerInfo;
   data: GeoJSON.FeatureCollection;
 };
-
 
 function App() {
   const initialLayerId = uuidv4();
@@ -127,7 +126,7 @@ function App() {
     <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'row' }}>
       <div style={{ margin: 16 }}>
         <LayerManager
-          layers={layers.map(l => l.info)}
+          layers={layers}
           activeLayerId={activeLayerId}
           onAddLayer={addLayer}
           onRemoveLayer={removeLayer}
@@ -195,6 +194,7 @@ function App() {
               active={activeLayerId === l.info.id}
               visible={l.info.visible}
               onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
+              allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
             />
           ))}
         </MapContainer>

@@ -9,9 +9,10 @@ interface GeoJsonDrawLayerProps {
   active: boolean;
   visible: boolean;
   onFeatureClick?: (idx: number) => void;
+  allLayersData?: GeoJSON.FeatureCollection[]; // Ajouté pour le snapping interlayer
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
@@ -50,11 +51,9 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
       let name = prompt('Nom de la nouvelle entité ?') || '';
       // Utilise la valeur courante de snapping
       if (snapping && e.layer instanceof L.Polyline && !(e.layer instanceof L.Polygon)) {
-        const geo = fgRef.current?.toGeoJSON();
-        let features: GeoJSON.Feature[] = [];
-        if (geo && 'features' in geo && Array.isArray(geo.features)) {
-          features = geo.features as GeoJSON.Feature[];
-        }
+        // Utilise toutes les features visibles de tous les calques pour le snapping
+        const allFeatures: GeoJSON.Feature[] = (allLayersData || []).flatMap(fc => fc.features);
+        let features: GeoJSON.Feature[] = allFeatures;
         // Récupère tous les sommets existants du réseau
         let allPoints: {coord: [number, number], featureIdx: number, segIdx?: number}[] = [];
         let allSegments: {a: [number, number], b: [number, number], featureIdx: number, segIdx: number}[] = [];
