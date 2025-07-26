@@ -1,13 +1,24 @@
-
+import FeatureNameList from './components/FeatureNameList';
+  // Mise à jour du nom d'une entité (feature) dans un calque
+  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
+    setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
+      if (l.info.id !== layerId) return l;
+      const features = l.data.features.map((f: GeoJSON.Feature, i: number) =>
+        i === featureIdx ? { ...f, properties: { ...f.properties, name: newName } } : f
+      );
+      return { ...l, data: { ...l.data, features } };
+    }));
+  };
 import { MapContainer, TileLayer } from 'react-leaflet';
+import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
+import LayerManager from './components/LayerManager';
+import type { LayerInfo } from './components/LayerManager';
+import AttributeEditor from './components/AttributeEditor';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
-import { useState } from 'react';
-import LayerManager from './components/LayerManager';
-import type { LayerInfo } from './components/LayerManager';
-import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
-import { v4 as uuidv4 } from 'uuid';
 
 type LayerData = {
   info: LayerInfo;
@@ -15,23 +26,42 @@ type LayerData = {
 };
 
 function App() {
+  const initialLayerId = uuidv4();
   const [layers, setLayers] = useState<LayerData[]>([
     {
-      info: { id: uuidv4(), name: 'Calque 1', visible: true },
+      info: { id: initialLayerId, name: 'Calque 1', visible: true },
       data: { type: 'FeatureCollection', features: [] },
     },
   ]);
-  const [activeLayerId, setActiveLayerId] = useState<string | null>(layers[0].info.id);
+  const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayerId);
+  // Suppression de la gestion d'image overlay
+  const [selectedFeature, setSelectedFeature] = useState<{ layerId: string; featureIdx: number } | null>(null);
+
+  // (image overlay supprimé)
+  // Gestion de la sélection d'une entité pour édition d'attributs
+  const handleFeatureClick = (layerId: string, idx: number) => {
+    setSelectedFeature({ layerId, featureIdx: idx });
+  };
+  const handleAttributeChange = (props: Record<string, any>) => {
+    if (!selectedFeature) return;
+    setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
+      if (l.info.id !== selectedFeature.layerId) return l;
+      const features = l.data.features.map((f: GeoJSON.Feature, i: number) => i === selectedFeature.featureIdx ? { ...f, properties: props } : f);
+      return { ...l, data: { ...l.data, features } };
+    }));
+  };
+  const closeAttributeEditor = () => setSelectedFeature(null);
 
   // Gestion des calques
   const addLayer = () => {
     const name = prompt('Nom du nouveau calque ?') || `Calque ${layers.length + 1}`;
+    const newId = uuidv4();
     const newLayer: LayerData = {
-      info: { id: uuidv4(), name, visible: true },
+      info: { id: newId, name, visible: true },
       data: { type: 'FeatureCollection', features: [] },
     };
     setLayers([...layers, newLayer]);
-    setActiveLayerId(newLayer.info.id);
+    setActiveLayerId(newId);
   };
   const removeLayer = (id: string) => {
     setLayers(layers.filter(l => l.info.id !== id));
@@ -85,6 +115,15 @@ function App() {
             </button>
           ))}
         </div>
+        {/* Onglet/liste des noms d'entités */}
+        <FeatureNameList
+          layers={layers.map(l => ({
+            info: l.info,
+            data: l.data,
+            onUpdateName: (featureIdx: number, newName: string) => updateFeatureName(l.info.id, featureIdx, newName),
+            onSelectFeature: (featureIdx: number) => setSelectedFeature({ layerId: l.info.id, featureIdx }),
+          }))}
+        />
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <h1 style={{ textAlign: 'center', margin: 0, padding: 10 }}>Mini QGIS Web (React + Leaflet)</h1>
@@ -93,6 +132,7 @@ function App() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          {/* ImageOverlayLayer supprimé */}
           {layers.map(l => (
             <GeoJsonDrawLayer
               key={l.info.id}
@@ -100,9 +140,22 @@ function App() {
               onChange={data => updateLayerData(l.info.id, data)}
               active={activeLayerId === l.info.id}
               visible={l.info.visible}
+              onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
             />
           ))}
         </MapContainer>
+        {/* Panneau d'édition des attributs */}
+        {selectedFeature && (() => {
+          const layer = layers.find(l => l.info.id === selectedFeature.layerId);
+          const feature = layer?.data.features[selectedFeature.featureIdx];
+          if (!feature) return null;
+          return (
+            <div style={{ position: 'fixed', top: 40, right: 40, zIndex: 1000 }}>
+              <AttributeEditor properties={feature.properties || {}} onChange={handleAttributeChange} />
+              <button onClick={closeAttributeEditor} style={{ width: '100%', marginTop: 8 }}>Fermer</button>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

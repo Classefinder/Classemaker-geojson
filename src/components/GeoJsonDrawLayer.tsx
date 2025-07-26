@@ -8,9 +8,10 @@ interface GeoJsonDrawLayerProps {
   onChange: (data: GeoJSON.FeatureCollection) => void;
   active: boolean;
   visible: boolean;
+  onFeatureClick?: (idx: number) => void;
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
@@ -44,8 +45,19 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
 
     // Gestion des événements
     const onCreated = (e: any) => {
+      // Demande le nom à l'utilisateur
+      let name = prompt('Nom de la nouvelle entité ?') || '';
+      // Ajoute la couche dessinée
       fgRef.current?.addLayer(e.layer);
-      const geojson = fgRef.current?.toGeoJSON() as GeoJSON.FeatureCollection;
+      // Récupère le GeoJSON
+      let geojson = fgRef.current?.toGeoJSON() as GeoJSON.FeatureCollection;
+      // Ajoute l'attribut name à la dernière feature
+      if (geojson && geojson.features.length > 0) {
+        geojson.features[geojson.features.length - 1].properties = {
+          ...geojson.features[geojson.features.length - 1].properties,
+          name,
+        };
+      }
       onChange(geojson);
     };
     const onEdited = () => {
@@ -69,14 +81,20 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
     };
   }, [active, map, onChange]);
 
-  // Synchronise les données GeoJSON
+
+  // Synchronise les données GeoJSON et ajoute gestion du clic
   useEffect(() => {
     if (!fgRef.current) return;
     fgRef.current.clearLayers();
+    let idx = 0;
     L.geoJSON(data).eachLayer((layer: LeafletLayer) => {
       fgRef.current?.addLayer(layer);
+      if (onFeatureClick) {
+        layer.on('click', () => onFeatureClick(idx));
+      }
+      idx++;
     });
-  }, [data]);
+  }, [data, onFeatureClick]);
 
   return <FeatureGroup ref={fgRef as any} />;
 };
