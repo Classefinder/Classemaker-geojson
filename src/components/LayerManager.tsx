@@ -41,8 +41,8 @@ const LayerManager: React.FC<LayerManagerProps> = ({
     const ways: { id: number; nodeRefs: number[]; tags: Record<string, string|number> }[] = [];
     const nodeMap = new Map<string, number>(); // key: 'lat,lon' => nodeId
 
-    cheminLayers.forEach(layer => {
-      const etage = layerAttributes[layer.info.id];
+    cheminLayers.forEach((layer, layerIdx) => {
+      const userNumber = layerAttributes[layer.info.id];
       (layer.data.features || []).forEach(feature => {
         if (feature.geometry.type === 'LineString') {
           const coords = feature.geometry.coordinates as [number, number][];
@@ -59,18 +59,18 @@ const LayerManager: React.FC<LayerManagerProps> = ({
             }
             nodeRefs.push(id);
           });
-          // Ajoute le way
+          // Ajoute le way avec les tags demandés
           ways.push({
             id: wayId--,
             nodeRefs,
             tags: {
+              bridge: 'yes',
+              layer: layerIdx, // index du calque
               foot: 'yes',
-              etage,
-              ...(feature.properties || {})
+              name: userNumber,
             }
           });
         }
-        // On pourrait ajouter la gestion des Points ou Polygones si besoin
       });
     });
 
@@ -85,12 +85,8 @@ const LayerManager: React.FC<LayerManagerProps> = ({
         xml += `  <nd ref=\"${ref}\" />\n`;
       });
       Object.entries(way.tags).forEach(([k, v]) => {
-        if (k !== 'name') // on peut filtrer certains tags si besoin
-          xml += `  <tag k=\"${k}\" v=\"${v}\" />\n`;
+        xml += `  <tag k=\"${k}\" v=\"${v}\" />\n`;
       });
-      if (way.tags.name) {
-        xml += `  <tag k=\"name\" v=\"${way.tags.name}\" />\n`;
-      }
       xml += `</way>\n`;
     });
     xml += `</osm>`;
