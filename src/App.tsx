@@ -123,63 +123,66 @@ function App() {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'row' }}>
-      <div style={{ margin: 16 }}>
-        <LayerManager
-          layers={layers}
-          activeLayerId={activeLayerId}
-          onAddLayer={addLayer}
-          onRemoveLayer={removeLayer}
-          onRenameLayer={renameLayer}
-          onToggleLayer={toggleLayer}
-          onSelectLayer={selectLayer}
-        />
-        {/* Images de fond */}
-        <div style={{ marginTop: 10 }}>
-          <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Images de fond :</label>
-          <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
-          {imagesFond.length > 0 && (
-            <div style={{ marginTop: 6 }}>
-              {imagesFond.map(img => (
-                <div key={img.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 13 }}>{img.url.split('/').pop()}</span>
-                  <button onClick={() => toggleImageFond(img.id)} style={{ marginLeft: 6, fontSize: 13 }}>
-                    {img.visible ? 'Cacher' : 'Afficher'}
-                  </button>
-                  <button onClick={() => removeImageFond(img.id)} style={{ marginLeft: 6, color: 'red', fontSize: 13 }}>🗑️</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {/* Attributs des calques visibles */}
-        <div style={{ marginTop: 10 }}>
-          <div style={{ fontWeight: 500, marginBottom: 2 }}>Attributs des calques visibles :</div>
-          {layers.filter(l => l.info.visible).map(l => (
-            <FeatureNameList
-              key={l.info.id}
-              layers={[{
-                info: l.info,
-                data: l.data,
-                onUpdateName: (featureIdx: number, newName: string) => updateFeatureName(l.info.id, featureIdx, newName),
-                onSelectFeature: (featureIdx: number) => setSelectedFeature({ layerId: l.info.id, featureIdx }),
-              }]}
-            />
-          ))}
-        </div>
-        {/* Boutons d'export */}
-        <div style={{ marginTop: 10 }}>
-          <div style={{ fontWeight: 500, marginBottom: 2 }}>Export GeoJSON :</div>
-          {layers.map(l => (
-            <button key={l.info.id} onClick={() => exportLayer(l.info.id)} style={{ width: '100%', marginBottom: 4, fontSize: 13 }}>
-              Exporter {l.info.name}
-            </button>
-          ))}
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
+      {/* Panneau latéral */}
+      <div style={{ width: 320, minWidth: 320, maxWidth: 320, height: '100vh', overflowY: 'auto', background: '#f7f7fa', borderRight: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column', padding: 0 }}>
+        <div style={{ padding: 20, flex: 1, minHeight: 0 }}>
+          <LayerManager
+            layers={layers}
+            activeLayerId={activeLayerId}
+            onAddLayer={addLayer}
+            onRemoveLayer={removeLayer}
+            onRenameLayer={renameLayer}
+            onToggleLayer={toggleLayer}
+            onSelectLayer={selectLayer}
+          />
+          {/* Images de fond */}
+          <div style={{ marginTop: 18 }}>
+            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Images de fond :</label>
+            <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
+            {imagesFond.length > 0 && (
+              <div style={{ marginTop: 6 }}>
+                {imagesFond.map(img => (
+                  <div key={img.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 13 }}>{img.url.split('/').pop()}</span>
+                    <button onClick={() => toggleImageFond(img.id)} style={{ marginLeft: 6, fontSize: 13 }}>
+                      {img.visible ? 'Cacher' : 'Afficher'}
+                    </button>
+                    <button onClick={() => removeImageFond(img.id)} style={{ marginLeft: 6, color: 'red', fontSize: 13 }}>🗑️</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Attributs des calques visibles */}
+          <div style={{ marginTop: 18 }}>
+            <div style={{ fontWeight: 500, marginBottom: 2 }}>Attributs des calques visibles :</div>
+            {layers.filter(l => l.info.visible).map(l => (
+              <FeatureNameList
+                key={l.info.id}
+                layers={[{
+                  info: l.info,
+                  data: l.data,
+                  onUpdateName: (featureIdx: number, newName: string) => updateFeatureName(l.info.id, featureIdx, newName),
+                  onSelectFeature: (featureIdx: number) => setSelectedFeature({ layerId: l.info.id, featureIdx }),
+                }]}
+              />
+            ))}
+          </div>
+          {/* Boutons d'export */}
+          <div style={{ marginTop: 18 }}>
+            <div style={{ fontWeight: 500, marginBottom: 2 }}>Export GeoJSON :</div>
+            {layers.map(l => (
+              <button key={l.info.id} onClick={() => exportLayer(l.info.id)} style={{ width: '100%', marginBottom: 4, fontSize: 13 }}>
+                Exporter {l.info.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <h1 style={{ textAlign: 'center', margin: 0, padding: 10 }}>Mini QGIS Web (React + Leaflet)</h1>
-        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} style={{ height: '80vh', width: '100%', margin: '0 auto', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+      {/* Carte plein écran */}
+      <div style={{ flex: 1, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -195,6 +198,7 @@ function App() {
               visible={l.info.visible}
               onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
               allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
+              highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
             />
           ))}
         </MapContainer>

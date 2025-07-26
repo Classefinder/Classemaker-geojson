@@ -10,9 +10,10 @@ interface GeoJsonDrawLayerProps {
   visible: boolean;
   onFeatureClick?: (idx: number) => void;
   allLayersData?: GeoJSON.FeatureCollection[]; // Ajouté pour le snapping interlayer
+  highlight?: number; // index de la feature à surligner
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
@@ -196,6 +197,25 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
       idx++;
     });
   }, [data, onFeatureClick]);
+
+  // Surlignage de la feature sélectionnée
+  useEffect(() => {
+    if (!fgRef.current) return;
+    let idx = 0;
+    fgRef.current.eachLayer((layer: LeafletLayer) => {
+      // @ts-ignore
+      if (layer.setStyle) {
+        if (typeof highlight === 'number' && idx === highlight) {
+          // @ts-ignore
+          layer.setStyle({ color: '#ff5722', weight: 5, opacity: 1 });
+        } else {
+          // @ts-ignore
+          layer.setStyle({ color: '#1976d2', weight: 2, opacity: 0.8 });
+        }
+      }
+      idx++;
+    });
+  }, [highlight, data]);
 
   return <>
     <button

@@ -5,6 +5,14 @@
   text-align: center;
 }
 
+body, html, #root {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  background: #f7f7fa;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -39,4 +47,83 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.app-sidebar {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 100vh;
+  overflow-y: auto;
+  background: #f7f7fa;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.app-sidebar > div {
+  padding: 20px;
+}
+
+button {
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  font-family: inherit;
+  background-color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
+button:hover {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+input, select {
+  border-radius: 4px;
+  border: 1px solid #d0d0d0;
+  padding: 0.4em 0.7em;
+  font-size: 1em;
+  font-family: inherit;
+  background: #fff;
+  margin-bottom: 4px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f0f0f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+.leaflet-container {
+  background: #e9e9f0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app-sidebar, .app-sidebar * {
+  box-sizing: border-box;
+  overflow-x: hidden !important;
+  word-break: break-word;
+}
+
+.app-sidebar button, .app-sidebar input, .app-sidebar select {
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+}
+
+.app-sidebar ul, .app-sidebar li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  word-break: break-word;
+}
+
+.app-sidebar label, .app-sidebar span {
+  word-break: break-word;
 }
