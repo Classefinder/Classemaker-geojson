@@ -1,21 +1,13 @@
-import FeatureNameList from './components/FeatureNameList';
-  // Mise à jour du nom d'une entité (feature) dans un calque
-  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
-    setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
-      if (l.info.id !== layerId) return l;
-      const features = l.data.features.map((f: GeoJSON.Feature, i: number) =>
-        i === featureIdx ? { ...f, properties: { ...f.properties, name: newName } } : f
-      );
-      return { ...l, data: { ...l.data, features } };
-    }));
-  };
-import { MapContainer, TileLayer } from 'react-leaflet';
 import { useState } from 'react';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import { v4 as uuidv4 } from 'uuid';
 import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
 import LayerManager from './components/LayerManager';
 import type { LayerInfo } from './components/LayerManager';
 import AttributeEditor from './components/AttributeEditor';
+import FeatureNameList from './components/FeatureNameList';
+import DistortableImageList from './components/DistortableImageList';
+import type { DistortableImageData } from './components/DistortableImageList';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
@@ -24,6 +16,7 @@ type LayerData = {
   info: LayerInfo;
   data: GeoJSON.FeatureCollection;
 };
+
 
 function App() {
   const initialLayerId = uuidv4();
@@ -34,10 +27,33 @@ function App() {
     },
   ]);
   const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayerId);
-  // Suppression de la gestion d'image overlay
   const [selectedFeature, setSelectedFeature] = useState<{ layerId: string; featureIdx: number } | null>(null);
+  // Gestion de plusieurs images de fond (DistortableImage)
+  const [imagesFond, setImagesFond] = useState<DistortableImageData[]>([]);
+  const handleImageFondUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setImagesFond(prev => [
+      ...prev,
+      {
+        id: uuidv4(),
+        url,
+        visible: true,
+        corners: null,
+      },
+    ]);
+  };
+  const toggleImageFond = (id: string) => {
+    setImagesFond(prev => prev.map(img => img.id === id ? { ...img, visible: !img.visible } : img));
+  };
+  const updateImageFond = (id: string, data: Partial<DistortableImageData>) => {
+    setImagesFond(prev => prev.map(img => img.id === id ? { ...img, ...data } : img));
+  };
+  const removeImageFond = (id: string) => {
+    setImagesFond(prev => prev.filter(img => img.id !== id));
+  };
 
-  // (image overlay supprimé)
   // Gestion de la sélection d'une entité pour édition d'attributs
   const handleFeatureClick = (layerId: string, idx: number) => {
     setSelectedFeature({ layerId, featureIdx: idx });
@@ -96,6 +112,17 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
+  // Mise à jour du nom d'une entité (feature) dans un calque
+  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
+    setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
+      if (l.info.id !== layerId) return l;
+      const features = l.data.features.map((f: GeoJSON.Feature, i: number) =>
+        i === featureIdx ? { ...f, properties: { ...f.properties, name: newName } } : f
+      );
+      return { ...l, data: { ...l.data, features } };
+    }));
+  };
+
   return (
     <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'row' }}>
       <div style={{ margin: 16 }}>
@@ -115,6 +142,24 @@ function App() {
             </button>
           ))}
         </div>
+        {/* Chargement et gestion des images de fond (DistortableImage) */}
+        <div style={{ marginTop: 16 }}>
+          <label style={{ display: 'block', marginBottom: 4 }}>Ajouter une image de fond (PNG/JPG) :</label>
+          <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
+          {imagesFond.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              {imagesFond.map(img => (
+                <div key={img.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{img.url.split('/').pop()}</span>
+                  <button onClick={() => toggleImageFond(img.id)} style={{ marginLeft: 8 }}>
+                    {img.visible ? 'Cacher' : 'Afficher'}
+                  </button>
+                  <button onClick={() => removeImageFond(img.id)} style={{ marginLeft: 8, color: 'red' }}>🗑️</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         {/* Onglet/liste des noms d'entités */}
         <FeatureNameList
           layers={layers.map(l => ({
@@ -132,7 +177,8 @@ function App() {
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {/* ImageOverlayLayer supprimé */}
+          {/* Images de fond manipulables (DistortableImageList) */}
+          <DistortableImageList images={imagesFond} onUpdate={updateImageFond} />
           {layers.map(l => (
             <GeoJsonDrawLayer
               key={l.info.id}
@@ -144,15 +190,24 @@ function App() {
             />
           ))}
         </MapContainer>
-        {/* Panneau d'édition des attributs */}
+        {/* Panneau d'édition des attributs + suppression entité */}
         {selectedFeature && (() => {
           const layer = layers.find(l => l.info.id === selectedFeature.layerId);
           const feature = layer?.data.features[selectedFeature.featureIdx];
           if (!feature) return null;
+          const handleDeleteFeature = () => {
+            setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
+              if (l.info.id !== selectedFeature.layerId) return l;
+              const features = l.data.features.filter((_, i) => i !== selectedFeature.featureIdx);
+              return { ...l, data: { ...l.data, features } };
+            }));
+            setSelectedFeature(null);
+          };
           return (
             <div style={{ position: 'fixed', top: 40, right: 40, zIndex: 1000 }}>
               <AttributeEditor properties={feature.properties || {}} onChange={handleAttributeChange} />
               <button onClick={closeAttributeEditor} style={{ width: '100%', marginTop: 8 }}>Fermer</button>
+              <button onClick={handleDeleteFeature} style={{ width: '100%', marginTop: 8, color: 'red' }}>Supprimer cette entité</button>
             </div>
           );
         })()}
