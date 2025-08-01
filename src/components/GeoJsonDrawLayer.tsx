@@ -35,12 +35,12 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
   useEffect(() => {
     if (!active || !fgRef.current) return;
     const drawControl = new L.Control.Draw({
-      edit: { featureGroup: fgRef.current },
+      edit: { featureGroup: fgRef.current, remove: false }, // Désactive l'outil suppression natif
       draw: {
         polygon: {},
         polyline: {},
         rectangle: {},
-        marker: {},
+        marker: false, // Désactive l'outil marker
         circle: false,
         circlemarker: false,
       },
