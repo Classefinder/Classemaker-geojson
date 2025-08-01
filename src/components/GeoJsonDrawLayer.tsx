@@ -3,6 +3,8 @@ import { FeatureGroup, useMap } from 'react-leaflet';
 import L, { FeatureGroup as LeafletFeatureGroup, Layer as LeafletLayer } from 'leaflet';
 import 'leaflet-draw';
 
+import type { LayerCategory } from './LayerManager';
+
 interface GeoJsonDrawLayerProps {
   data: GeoJSON.FeatureCollection;
   onChange: (data: GeoJSON.FeatureCollection) => void;
@@ -11,9 +13,10 @@ interface GeoJsonDrawLayerProps {
   onFeatureClick?: (idx: number) => void;
   allLayersData?: GeoJSON.FeatureCollection[]; // Ajouté pour le snapping interlayer
   highlight?: number; // index de la feature à surligner
+  category?: LayerCategory;
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight, category }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
@@ -34,16 +37,28 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
   // Gestion du contrôle de dessin
   useEffect(() => {
     if (!active || !fgRef.current) return;
+    // Outils selon la catégorie
+    let drawOptions: any = {
+      polygon: false,
+      polyline: false,
+      rectangle: false,
+      marker: false,
+      circle: false,
+      circlemarker: false,
+    };
+    if (category === 'salles') {
+      drawOptions.polygon = {};
+      drawOptions.rectangle = {};
+    } else if (category === 'chemin') {
+      drawOptions.polyline = {};
+    } else if (category === 'fond') {
+      drawOptions.polygon = {};
+      drawOptions.polyline = {};
+      drawOptions.rectangle = {};
+    }
     const drawControl = new L.Control.Draw({
-      edit: { featureGroup: fgRef.current, remove: false }, // Désactive l'outil suppression natif
-      draw: {
-        polygon: {},
-        polyline: {},
-        rectangle: {},
-        marker: false, // Désactive l'outil marker
-        circle: false,
-        circlemarker: false,
-      },
+      edit: { featureGroup: fgRef.current, remove: false },
+      draw: drawOptions,
     });
     map.addControl(drawControl);
 

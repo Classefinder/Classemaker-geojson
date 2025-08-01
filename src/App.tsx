@@ -69,10 +69,17 @@ function App() {
 
   // Gestion des calques
   const addLayer = (category: LayerCategory) => {
-    const name = prompt(`Nom du nouveau ${category === 'salles' ? 'salle' : 'chemin'} ?`) || `${category === 'salles' ? 'Salle' : 'Chemin'} ${layers.filter(l => l.info.category === category).length + 1}`;
+    let namePrompt = '';
+    if (category === 'salles') namePrompt = 'Nom du nouveau salle ?';
+    else if (category === 'chemin') namePrompt = 'Nom du nouveau chemin ?';
+    else if (category === 'fond') namePrompt = 'Nom du nouveau fond de carte ?';
+    const name = prompt(namePrompt) ||
+      (category === 'salles' ? `Salle ${layers.filter(l => l.info.category === category).length + 1}` :
+      category === 'chemin' ? `Chemin ${layers.filter(l => l.info.category === category).length + 1}` :
+      `Fond ${layers.filter(l => l.info.category === category).length + 1}`);
     const newId = uuidv4();
     const newLayer: LayerData = {
-      info: { id: newId, name, visible: true, category },
+      info: { id: newId, name, visible: true, category, features: [] },
       data: { type: 'FeatureCollection', features: [] },
     };
     setLayers([...layers, newLayer]);
@@ -199,6 +206,7 @@ function App() {
               onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
               allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
               highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
+              category={l.info.category}
             />
           ))}
         </MapContainer>
