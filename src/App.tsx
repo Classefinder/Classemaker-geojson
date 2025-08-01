@@ -22,10 +22,30 @@ function App() {
   const initialLayerId = uuidv4();
   const [layers, setLayers] = useState<LayerData[]>([
     {
-      info: { id: initialLayerId, name: 'Salle 1', visible: true, category: 'salles' },
+      info: { id: initialLayerId, name: 'Salle 1', visible: true, category: 'salles', features: [] },
       data: { type: 'FeatureCollection', features: [] },
     },
   ]);
+  // Correction bug build : ajout de updateFeatureName
+  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
+    setLayers(prevLayers =>
+      prevLayers.map(l =>
+        l.info.id === layerId
+          ? {
+              ...l,
+              data: {
+                ...l.data,
+                features: l.data.features.map((f, i) =>
+                  i === featureIdx
+                    ? { ...f, properties: { ...f.properties, name: newName } }
+                    : f
+                ),
+              },
+            }
+          : l
+      )
+    );
+  };
   const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayerId);
   const [selectedFeature, setSelectedFeature] = useState<{ layerId: string; featureIdx: number } | null>(null);
   // Gestion de plusieurs images de fond (DistortableImage)
@@ -131,6 +151,8 @@ function App() {
     setLayers(layers.map(l => l.info.id === id ? { ...l, data } : l));
   };
 
+
+
   // Export d'un calque
   const exportLayer = (id: string) => {
     const layer = layers.find(l => l.info.id === id);
@@ -145,29 +167,35 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Mise à jour du nom d'une entité (feature) dans un calque
-  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
-    setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
-      if (l.info.id !== layerId) return l;
-      const features = l.data.features.map((f: GeoJSON.Feature, i: number) =>
-        i === featureIdx ? { ...f, properties: { ...f.properties, name: newName } } : f
-      );
-      return { ...l, data: { ...l.data, features } };
-    }));
-  };
 
-  // --- Styles extraits dans App.css ---
-  // .app-root : conteneur principal (flex row)
-  // .app-sidebar : panneau latéral
-  // .app-sidebar-content : contenu scrollable du panneau
-  // .app-section : section du panneau (marge verticale)
-  // .app-section-label : label de section
-  // .app-image-list : liste images de fond
-  // .app-image-item : ligne image de fond
-  // .app-image-btn : bouton image de fond
-  // .app-export-btn : bouton export geojson
-  // .app-main : conteneur principal carte
-  // .app-attribute-panel : panneau d'édition attributs
+
+
+  // Export PBF via serveur Node.js (pour les calques de fond)
+  const exportLayerPbf = async (id: string) => {
+    const layer = layers.find(l => l.info.id === id);
+    if (!layer) return;
+    const data = JSON.stringify(layer.data);
+    const formData = new FormData();
+    formData.append('geojson', new Blob([data], { type: 'application/json' }), `${layer.info.name}.geojson`);
+    try {
+      const res = await fetch('http://localhost:3001/export-pbf', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Erreur serveur');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${layer.info.name}-tiles.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('Erreur export PBF: ' + (e instanceof Error ? e.message : e));
+    }
+  };
 
   return (
     <div className="app-root">
@@ -221,9 +249,21 @@ function App() {
           <div className="app-section">
             <div className="app-section-label">Export GeoJSON :</div>
             {layers.map(l => (
-              <button key={l.info.id} onClick={() => exportLayer(l.info.id)} className="app-export-btn">
-                Exporter {l.info.name}
-              </button>
+              <div key={l.info.id} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                <button onClick={() => exportLayer(l.info.id)} className="app-export-btn">
+                  Exporter {l.info.name}
+                </button>
+                {l.info.category === 'fond' && (
+                  <button
+                    onClick={() => exportLayerPbf(l.info.id)}
+                    className="app-export-btn"
+                    style={{ background: '#2d7bba', color: 'white' }}
+                    title="Exporter en tuiles PBF (MBTiles/VectorTiles) via serveur Tippecanoe"
+                  >
+                    Export PBF
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>

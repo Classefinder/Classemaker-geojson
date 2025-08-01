@@ -1,0 +1,14 @@
+{
+  "name": "classefinder-geojson-server",
+  "version": "1.0.0",
+  "main": "server.cjs",
+  "type": "module",
+  "scripts": {
+    "start:server": "node server.cjs"
+  },
+  "dependencies": {
+    "archiver": "^5.3.2",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

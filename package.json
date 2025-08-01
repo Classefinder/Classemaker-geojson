@@ -12,10 +12,13 @@
   "dependencies": {
     "@types/leaflet": "^1.9.20",
     "@types/leaflet-draw": "^1.0.12",
+    "archiver": "^7.0.1",
+    "express": "^5.1.0",
     "leaflet": "^1.9.4",
     "leaflet-distortableimage": "^0.21.9",
     "leaflet-draw": "^1.0.4",
     "leaflet-toolbar": "^0.4.0-alpha.2",
+    "multer": "^2.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0",
