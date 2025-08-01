@@ -14,9 +14,10 @@ interface GeoJsonDrawLayerProps {
   allLayersData?: GeoJSON.FeatureCollection[]; // Ajouté pour le snapping interlayer
   highlight?: number; // index de la feature à surligner
   category?: LayerCategory;
+  opacity?: number;
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight, category }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight, category, opacity }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
@@ -209,9 +210,15 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
       if (onFeatureClick) {
         layer.on('click', () => onFeatureClick(idx));
       }
+      // Applique l'opacité si possible
+      // @ts-ignore
+      if (layer.setStyle) {
+        // @ts-ignore
+        layer.setStyle({ opacity: opacity ?? 1, fillOpacity: opacity ?? 1 });
+      }
       idx++;
     });
-  }, [data, onFeatureClick]);
+  }, [data, onFeatureClick, opacity]);
 
   // Surlignage de la feature sélectionnée
   useEffect(() => {
@@ -233,13 +240,15 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
   }, [highlight, data]);
 
   return <>
-    <button
-      style={{position:'absolute',top:10,right:10,zIndex:2000,padding:6,background:snapping?'#4caf50':'#ccc',color:snapping?'#fff':'#222',border:'none',borderRadius:4,cursor:'pointer'}}
-      onClick={()=>setSnapping(s=>!s)}
-      title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
-    >
-      {snapping ? 'Aimant : ON' : 'Aimant : OFF'}
-    </button>
+    {category === 'chemin' && (
+      <button
+        style={{position:'absolute',top:10,right:10,zIndex:2000,padding:6,background:snapping?'#4caf50':'#ccc',color:snapping?'#fff':'#222',border:'none',borderRadius:4,cursor:'pointer'}}
+        onClick={()=>setSnapping(s=>!s)}
+        title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
+      >
+        {snapping ? 'Aimant : ON' : 'Aimant : OFF'}
+      </button>
+    )}
     <FeatureGroup ref={fgRef as any} />
   </>;
 };

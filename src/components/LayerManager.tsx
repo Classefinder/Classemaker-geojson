@@ -9,6 +9,7 @@ export interface LayerInfo {
   visible: boolean;
   category: LayerCategory;
   features: Array<{ type: string; properties: Record<string, any>; geometry: any }>;
+  opacity?: number;
 }
 
 interface LayerManagerProps {
@@ -19,6 +20,7 @@ interface LayerManagerProps {
   onRenameLayer: (id: string, name: string) => void;
   onToggleLayer: (id: string) => void;
   onSelectLayer: (id: string) => void;
+  onSetLayerOpacity: (id: string, opacity: number) => void;
 }
 
 const LayerManager: React.FC<LayerManagerProps> = ({
@@ -29,6 +31,7 @@ const LayerManager: React.FC<LayerManagerProps> = ({
   onRenameLayer,
   onToggleLayer,
   onSelectLayer,
+  onSetLayerOpacity,
 }) => {
   const [showExportModal, setShowExportModal] = useState(false);
 
@@ -114,6 +117,7 @@ const LayerManager: React.FC<LayerManagerProps> = ({
               <li key={layer.info.id} style={{ marginBottom: 4, display: 'flex', alignItems: 'center', background: activeLayerId === layer.info.id ? '#e3f2fd' : 'transparent', borderRadius: 4 }}>
                 <input type="checkbox" checked={layer.info.visible} onChange={() => onToggleLayer(layer.info.id)} style={{ marginRight: 6 }} />
                 <span onClick={() => onSelectLayer(layer.info.id)} style={{ flex: 1, cursor: 'pointer', fontWeight: activeLayerId === layer.info.id ? 'bold' : 'normal' }}>{layer.info.name}</span>
+                <input type="range" min="0" max="1" step="0.01" value={layer.info.opacity ?? 1} onChange={e => onSetLayerOpacity(layer.info.id, parseFloat(e.target.value))} style={{ width: 60, marginLeft: 6 }} title="Opacité" />
                 <button onClick={() => {
                   const newName = prompt('Nouveau nom du calque', layer.info.name);
                   if (newName) onRenameLayer(layer.info.id, newName);

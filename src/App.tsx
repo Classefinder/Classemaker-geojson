@@ -77,13 +77,35 @@ function App() {
       (category === 'salles' ? `Salle ${layers.filter(l => l.info.category === category).length + 1}` :
       category === 'chemin' ? `Chemin ${layers.filter(l => l.info.category === category).length + 1}` :
       `Fond ${layers.filter(l => l.info.category === category).length + 1}`);
-    const newId = uuidv4();
-    const newLayer: LayerData = {
-      info: { id: newId, name, visible: true, category, features: [] },
-      data: { type: 'FeatureCollection', features: [] },
-    };
-    setLayers([...layers, newLayer]);
-    setActiveLayerId(newId);
+
+    if (category === 'salles') {
+      // Crée aussi un calque chemin et fond de carte avec le même nom
+      const salleId = uuidv4();
+      const cheminId = uuidv4();
+      const fondId = uuidv4();
+      const salleLayer: LayerData = {
+        info: { id: salleId, name, visible: true, category: 'salles', features: [] },
+        data: { type: 'FeatureCollection', features: [] },
+      };
+      const cheminLayer: LayerData = {
+        info: { id: cheminId, name, visible: true, category: 'chemin', features: [] },
+        data: { type: 'FeatureCollection', features: [] },
+      };
+      const fondLayer: LayerData = {
+        info: { id: fondId, name, visible: true, category: 'fond', features: [] },
+        data: { type: 'FeatureCollection', features: [] },
+      };
+      setLayers([...layers, salleLayer, cheminLayer, fondLayer]);
+      setActiveLayerId(salleId);
+    } else {
+      const newId = uuidv4();
+      const newLayer: LayerData = {
+        info: { id: newId, name, visible: true, category, features: [] },
+        data: { type: 'FeatureCollection', features: [] },
+      };
+      setLayers([...layers, newLayer]);
+      setActiveLayerId(newId);
+    }
   };
   const removeLayer = (id: string) => {
     setLayers(layers.filter(l => l.info.id !== id));
@@ -93,6 +115,10 @@ function App() {
   };
   const renameLayer = (id: string, name: string) => {
     setLayers(layers.map(l => l.info.id === id ? { ...l, info: { ...l.info, name } } : l));
+  };
+
+  const setLayerOpacity = (id: string, opacity: number) => {
+    setLayers(layers.map(l => l.info.id === id ? { ...l, info: { ...l.info, opacity } } : l));
   };
   const toggleLayer = (id: string) => {
     setLayers(layers.map(l => l.info.id === id ? { ...l, info: { ...l.info, visible: !l.info.visible } } : l));
@@ -142,6 +168,7 @@ function App() {
             onRenameLayer={renameLayer}
             onToggleLayer={toggleLayer}
             onSelectLayer={selectLayer}
+            onSetLayerOpacity={setLayerOpacity}
           />
           {/* Images de fond */}
           <div style={{ marginTop: 18 }}>
@@ -207,6 +234,7 @@ function App() {
               allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
               highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
               category={l.info.category}
+              opacity={l.info.opacity ?? 1}
             />
           ))}
         </MapContainer>
