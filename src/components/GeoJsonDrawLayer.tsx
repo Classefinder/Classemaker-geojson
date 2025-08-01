@@ -1,7 +1,10 @@
+import '../geojson-drawlayer.css'; // Styles dédiés GeoJsonDrawLayer
 import React, { useRef, useEffect, useState } from 'react';
 import { FeatureGroup, useMap } from 'react-leaflet';
 import L, { FeatureGroup as LeafletFeatureGroup, Layer as LeafletLayer } from 'leaflet';
 import 'leaflet-draw';
+
+import type { LayerCategory } from './LayerManager';
 
 interface GeoJsonDrawLayerProps {
   data: GeoJSON.FeatureCollection;
@@ -11,9 +14,11 @@ interface GeoJsonDrawLayerProps {
   onFeatureClick?: (idx: number) => void;
   allLayersData?: GeoJSON.FeatureCollection[]; // Ajouté pour le snapping interlayer
   highlight?: number; // index de la feature à surligner
+  category?: LayerCategory;
+  opacity?: number;
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight, category, opacity }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
@@ -34,16 +39,28 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
   // Gestion du contrôle de dessin
   useEffect(() => {
     if (!active || !fgRef.current) return;
+    // Outils selon la catégorie
+    let drawOptions: any = {
+      polygon: false,
+      polyline: false,
+      rectangle: false,
+      marker: false,
+      circle: false,
+      circlemarker: false,
+    };
+    if (category === 'salles') {
+      drawOptions.polygon = {};
+      drawOptions.rectangle = {};
+    } else if (category === 'chemin') {
+      drawOptions.polyline = {};
+    } else if (category === 'fond') {
+      drawOptions.polygon = {};
+      drawOptions.polyline = {};
+      drawOptions.rectangle = {};
+    }
     const drawControl = new L.Control.Draw({
-      edit: { featureGroup: fgRef.current },
-      draw: {
-        polygon: {},
-        polyline: {},
-        rectangle: {},
-        marker: {},
-        circle: false,
-        circlemarker: false,
-      },
+      edit: { featureGroup: fgRef.current, remove: false },
+      draw: drawOptions,
     });
     map.addControl(drawControl);
 
@@ -194,9 +211,15 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
       if (onFeatureClick) {
         layer.on('click', () => onFeatureClick(idx));
       }
+      // Applique l'opacité si possible
+      // @ts-ignore
+      if (layer.setStyle) {
+        // @ts-ignore
+        layer.setStyle({ opacity: opacity ?? 1, fillOpacity: opacity ?? 1 });
+      }
       idx++;
     });
-  }, [data, onFeatureClick]);
+  }, [data, onFeatureClick, opacity]);
 
   // Surlignage de la feature sélectionnée
   useEffect(() => {
@@ -217,14 +240,17 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
     });
   }, [highlight, data]);
 
+  // .draw-snapping-btn : bouton du mode aimant (voir geojson-drawlayer.css)
   return <>
-    <button
-      style={{position:'absolute',top:10,right:10,zIndex:2000,padding:6,background:snapping?'#4caf50':'#ccc',color:snapping?'#fff':'#222',border:'none',borderRadius:4,cursor:'pointer'}}
-      onClick={()=>setSnapping(s=>!s)}
-      title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
-    >
-      {snapping ? 'Aimant : ON' : 'Aimant : OFF'}
-    </button>
+    {category === 'chemin' && (
+      <button
+        className={snapping ? 'draw-snapping-btn draw-snapping-btn-on' : 'draw-snapping-btn'}
+        onClick={()=>setSnapping(s=>!s)}
+        title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
+      >
+        {snapping ? 'Aimant : ON' : 'Aimant : OFF'}
+      </button>
+    )}
     <FeatureGroup ref={fgRef as any} />
   </>;
 };

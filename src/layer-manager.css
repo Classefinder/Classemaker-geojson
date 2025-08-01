@@ -1,0 +1,109 @@
+/* Styles pour LayerManager (extraits du refactoring) */
+
+.layer-manager-container {
+  background: #ffffff00;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  font-size: 14px;
+}
+
+.layer-manager-title {
+  margin: 8px 0 4px 0;
+  font-size: 16px;
+}
+
+.layer-category-block {
+  margin-bottom: 8px;
+}
+
+.layer-category-title {
+  font-weight: bold;
+  color: #1976d2;
+  margin-bottom: 2px;
+}
+
+.layer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.layer-list-item {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.layer-list-item.active {
+  background: #e3f2fd;
+}
+
+.layer-checkbox {
+  margin-right: 6px;
+}
+
+.layer-name {
+  flex: 1;
+  cursor: pointer;
+  font-weight: normal;
+  transition: font-weight 0.2s;
+}
+.layer-list-item.active .layer-name {
+  font-weight: bold;
+}
+
+.layer-opacity {
+  width: 60px;
+  margin-left: 6px;
+}
+
+.layer-btn {
+  margin-left: 2px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  padding: 0.3em 0.7em;
+  font-size: 1em;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
+.layer-btn:hover {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.layer-add-btn {
+  width: 100%;
+  margin-top: 2px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  padding: 0.5em 1em;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
+.layer-add-btn:hover {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.layer-export-btn {
+  width: 100%;
+  margin-top: 2px;
+  font-size: 13px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.layer-export-btn:hover {
+  background: #388e3c;
+}
