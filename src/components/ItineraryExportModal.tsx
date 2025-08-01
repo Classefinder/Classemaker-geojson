@@ -1,3 +1,4 @@
+import '../itinerary-export-modal.css'; // Styles dédiés ItineraryExportModal
 import React, { useState } from 'react';
 import type { LayerInfo } from './LayerManager';
 
@@ -21,25 +22,35 @@ const ItineraryExportModal: React.FC<ItineraryExportModalProps> = ({ layers, onC
     onClose();
   };
 
+  //
+  // .export-modal-overlay : overlay sombre
+  // .export-modal-panel : panneau modal
+  // .export-modal-list : liste des calques
+  // .export-modal-list-item : ligne calque
+  // .export-modal-input : input numéro
+  // .export-modal-btn : bouton action
+  // .export-modal-btn-export : bouton export
+  // .export-modal-btn-cancel : bouton annuler
+  //
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-      <div style={{ background: '#fff', padding: 20, borderRadius: 8, width: 400 }}>
+    <div className="export-modal-overlay">
+      <div className="export-modal-panel">
         <h3>Export Itinéraire</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="export-modal-list">
           {layers.map(layer => (
-            <li key={layer.id} style={{ marginBottom: 10 }}>
+            <li key={layer.id} className="export-modal-list-item">
               <span>{layer.name}</span>
               <input
                 type="number"
                 value={layerAttributes[layer.id] || ''}
                 onChange={(e) => handleAttributeChange(layer.id, parseInt(e.target.value, 10))}
-                style={{ marginLeft: 10 }}
+                className="export-modal-input"
               />
             </li>
           ))}
         </ul>
-        <button onClick={handleExport} style={{ marginRight: 10, backgroundColor: '#4caf50', color: '#fff', padding: '5px 10px', border: 'none', borderRadius: 4 }}>Exporter</button>
-        <button onClick={onClose} style={{ backgroundColor: '#f44336', color: '#fff', padding: '5px 10px', border: 'none', borderRadius: 4 }}>Annuler</button>
+        <button onClick={handleExport} className="export-modal-btn export-modal-btn-export">Exporter</button>
+        <button onClick={onClose} className="export-modal-btn export-modal-btn-cancel">Annuler</button>
       </div>
     </div>
   );

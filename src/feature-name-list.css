@@ -1,0 +1,35 @@
+/* Styles pour FeatureNameList (refactoring) */
+
+.feature-list-panel {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.feature-list-block {
+  margin-bottom: 8px;
+}
+
+.feature-list-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+}
+
+.feature-list-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.feature-list-name {
+  flex: 1;
+  margin-right: 8px;
+  cursor: pointer;
+}

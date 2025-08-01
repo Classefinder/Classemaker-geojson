@@ -1,3 +1,4 @@
+import '../layer-manager.css'; // Styles dédiés LayerManager
 import React, { useState } from 'react';
 import ItineraryExportModal from './ItineraryExportModal';
 import type { LayerData } from '../App';
@@ -104,31 +105,46 @@ const LayerManager: React.FC<LayerManagerProps> = ({
   };
 
   const categories: LayerCategory[] = ['salles', 'chemin', 'fond'];
+  // --- Styles extraits dans App.css ---
+  // .layer-manager-container : conteneur principal du panneau
+  // .layer-manager-title : titre "Calques"
+  // .layer-category-block : bloc d'une catégorie de calques
+  // .layer-category-title : titre de catégorie
+  // .layer-list : liste des calques
+  // .layer-list-item : ligne d'un calque
+  // .layer-list-item.active : ligne active
+  // .layer-checkbox : case visibilité
+  // .layer-name : nom du calque
+  // .layer-opacity : slider d'opacité
+  // .layer-btn : bouton action (rename, delete)
+  // .layer-add-btn : bouton ajouter calque
+  // .layer-export-btn : bouton export itinéraire
+
   return (
-    <div style={{ background: '#fff', padding: 8, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', width: 220, fontSize: 14 }}>
-      <h3 style={{ margin: '8px 0 4px 0', fontSize: 16 }}>Calques</h3>
+    <div className="layer-manager-container">
+      <h3 className="layer-manager-title">Calques</h3>
       {categories.map(cat => (
-        <div key={cat} style={{ marginBottom: 8 }}>
-          <div style={{ fontWeight: 'bold', color: '#1976d2', marginBottom: 2 }}>
+        <div key={cat} className="layer-category-block">
+          <div className="layer-category-title">
             {cat === 'salles' ? 'Salles' : cat === 'chemin' ? 'Chemins' : 'Fond de carte'}
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul className="layer-list">
             {layers.filter(l => l.info.category === cat).map(layer => (
-              <li key={layer.info.id} style={{ marginBottom: 4, display: 'flex', alignItems: 'center', background: activeLayerId === layer.info.id ? '#e3f2fd' : 'transparent', borderRadius: 4 }}>
-                <input type="checkbox" checked={layer.info.visible} onChange={() => onToggleLayer(layer.info.id)} style={{ marginRight: 6 }} />
-                <span onClick={() => onSelectLayer(layer.info.id)} style={{ flex: 1, cursor: 'pointer', fontWeight: activeLayerId === layer.info.id ? 'bold' : 'normal' }}>{layer.info.name}</span>
-                <input type="range" min="0" max="1" step="0.01" value={layer.info.opacity ?? 1} onChange={e => onSetLayerOpacity(layer.info.id, parseFloat(e.target.value))} style={{ width: 60, marginLeft: 6 }} title="Opacité" />
+              <li key={layer.info.id} className={`layer-list-item${activeLayerId === layer.info.id ? ' active' : ''}`}>
+                <input type="checkbox" checked={layer.info.visible} onChange={() => onToggleLayer(layer.info.id)} className="layer-checkbox" />
+                <span onClick={() => onSelectLayer(layer.info.id)} className="layer-name">{layer.info.name}</span>
+                <input type="range" min="0" max="1" step="0.01" value={layer.info.opacity ?? 1} onChange={e => onSetLayerOpacity(layer.info.id, parseFloat(e.target.value))} className="layer-opacity" title="Opacité" />
                 <button onClick={() => {
                   const newName = prompt('Nouveau nom du calque', layer.info.name);
                   if (newName) onRenameLayer(layer.info.id, newName);
-                }} style={{ marginLeft: 2 }}>✏️</button>
-                <button onClick={() => onRemoveLayer(layer.info.id)} style={{ marginLeft: 2 }}>🗑️</button>
+                }} className="layer-btn">✏️</button>
+                <button onClick={() => onRemoveLayer(layer.info.id)} className="layer-btn">🗑️</button>
               </li>
             ))}
           </ul>
-          <button onClick={() => onAddLayer(cat)} style={{ width: '100%', marginTop: 2, fontSize: 13 }}>➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
+          <button onClick={() => onAddLayer(cat)} className="layer-add-btn">➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
           {cat === 'chemin' && (
-            <button onClick={() => setShowExportModal(true)} style={{ width: '100%', marginTop: 2, fontSize: 13, backgroundColor: '#4caf50', color: '#fff' }}>
+            <button onClick={() => setShowExportModal(true)} className="layer-export-btn">
               📤 Export Itinéraire
             </button>
           )}

@@ -1,0 +1,73 @@
+/* Styles pour AttributeEditor (refactoring)
+   Utilise les classes globales définies dans global-styles.css pour un style unifié.
+   Exemple d'utilisation dans le JSX :
+     <div className="panel attr-panel"> ... </div>
+     <h2 className="title attr-title"> ... </h2>
+     <ul className="list attr-list"> ... </ul>
+     <button className="btn attr-add-btn"> ... </button>
+*/
+
+.attr-panel {
+  /* Ajoute ici des styles spécifiques à AttributeEditor si besoin */
+}
+
+.attr-title {
+  /* Spécifique à AttributeEditor si besoin */
+}
+
+.attr-list {
+  /* Spécifique à AttributeEditor si besoin */
+}
+
+.attr-list-item {
+  margin-bottom: var(--gap);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--small-gap);
+}
+
+.attr-key {
+  width: 100%;
+  background: var(--input-bg);
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+
+.attr-value-row {
+  display: flex;
+  gap: var(--small-gap);
+}
+
+.attr-value {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.attr-remove-btn {
+  flex-shrink: 0;
+}
+
+.attr-add-row {
+  display: flex;
+  gap: var(--small-gap);
+  margin-top: var(--gap);
+  flex-wrap: wrap;
+}
+
+.attr-add-key {
+  width: 80px;
+  margin-right: var(--small-gap);
+  flex-shrink: 0;
+}
+
+.attr-add-value {
+  flex: 1;
+  margin-right: var(--small-gap);
+  min-width: 0;
+}
+
+.attr-add-btn {
+  flex-shrink: 0;
+}

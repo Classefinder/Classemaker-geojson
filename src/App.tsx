@@ -1,3 +1,4 @@
+import './app-style-refactor.css'; // Styles extraits pour App
 import { useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { v4 as uuidv4 } from 'uuid';
@@ -155,11 +156,24 @@ function App() {
     }));
   };
 
+  // --- Styles extraits dans App.css ---
+  // .app-root : conteneur principal (flex row)
+  // .app-sidebar : panneau latéral
+  // .app-sidebar-content : contenu scrollable du panneau
+  // .app-section : section du panneau (marge verticale)
+  // .app-section-label : label de section
+  // .app-image-list : liste images de fond
+  // .app-image-item : ligne image de fond
+  // .app-image-btn : bouton image de fond
+  // .app-export-btn : bouton export geojson
+  // .app-main : conteneur principal carte
+  // .app-attribute-panel : panneau d'édition attributs
+
   return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
+    <div className="app-root">
       {/* Panneau latéral */}
-      <div style={{ width: 320, minWidth: 320, maxWidth: 320, height: '100vh', overflowY: 'auto', background: '#f7f7fa', borderRight: '1px solid #e0e0e0', display: 'flex', flexDirection: 'column', padding: 0 }}>
-        <div style={{ padding: 20, flex: 1, minHeight: 0 }}>
+      <div className="app-sidebar">
+        <div className="app-sidebar-content">
           <LayerManager
             layers={layers}
             activeLayerId={activeLayerId}
@@ -171,26 +185,26 @@ function App() {
             onSetLayerOpacity={setLayerOpacity}
           />
           {/* Images de fond */}
-          <div style={{ marginTop: 18 }}>
-            <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>Images de fond :</label>
+          <div className="app-section">
+            <label className="app-section-label">Images de fond :</label>
             <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
             {imagesFond.length > 0 && (
-              <div style={{ marginTop: 6 }}>
+              <div className="app-image-list">
                 {imagesFond.map(img => (
-                  <div key={img.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 13 }}>{img.url.split('/').pop()}</span>
-                    <button onClick={() => toggleImageFond(img.id)} style={{ marginLeft: 6, fontSize: 13 }}>
+                  <div key={img.id} className="app-image-item">
+                    <span className="app-image-name">{img.url.split('/').pop()}</span>
+                    <button onClick={() => toggleImageFond(img.id)} className="app-image-btn">
                       {img.visible ? 'Cacher' : 'Afficher'}
                     </button>
-                    <button onClick={() => removeImageFond(img.id)} style={{ marginLeft: 6, color: 'red', fontSize: 13 }}>🗑️</button>
+                    <button onClick={() => removeImageFond(img.id)} className="app-image-btn app-image-btn-delete">🗑️</button>
                   </div>
                 ))}
               </div>
             )}
           </div>
           {/* Attributs des calques visibles */}
-          <div style={{ marginTop: 18 }}>
-            <div style={{ fontWeight: 500, marginBottom: 2 }}>Attributs des calques visibles :</div>
+          <div className="app-section">
+            <div className="app-section-label">Attributs des calques visibles :</div>
             {layers.filter(l => l.info.visible).map(l => (
               <FeatureNameList
                 key={l.info.id}
@@ -204,10 +218,10 @@ function App() {
             ))}
           </div>
           {/* Boutons d'export */}
-          <div style={{ marginTop: 18 }}>
-            <div style={{ fontWeight: 500, marginBottom: 2 }}>Export GeoJSON :</div>
+          <div className="app-section">
+            <div className="app-section-label">Export GeoJSON :</div>
             {layers.map(l => (
-              <button key={l.info.id} onClick={() => exportLayer(l.info.id)} style={{ width: '100%', marginBottom: 4, fontSize: 13 }}>
+              <button key={l.info.id} onClick={() => exportLayer(l.info.id)} className="app-export-btn">
                 Exporter {l.info.name}
               </button>
             ))}
@@ -215,8 +229,8 @@ function App() {
         </div>
       </div>
       {/* Carte plein écran */}
-      <div style={{ flex: 1, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} style={{ height: '100%', width: '100%' }}>
+      <div className="app-main">
+        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} className="app-map-container">
           <TileLayer
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -252,10 +266,10 @@ function App() {
             setSelectedFeature(null);
           };
           return (
-            <div style={{ position: 'fixed', top: 40, right: 40, zIndex: 1000 }}>
+            <div className="app-attribute-panel">
               <AttributeEditor properties={feature.properties || {}} onChange={handleAttributeChange} />
-              <button onClick={closeAttributeEditor} style={{ width: '100%', marginTop: 8 }}>Fermer</button>
-              <button onClick={handleDeleteFeature} style={{ width: '100%', marginTop: 8, color: 'red' }}>Supprimer cette entité</button>
+              <button onClick={closeAttributeEditor} className="app-attribute-btn">Fermer</button>
+              <button onClick={handleDeleteFeature} className="app-attribute-btn app-attribute-btn-delete">Supprimer cette entité</button>
             </div>
           );
         })()}

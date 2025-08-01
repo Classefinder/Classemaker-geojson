@@ -1,0 +1,90 @@
+/*
+  global-styles.css
+  -----------------
+  Ce fichier centralise toutes les variables et styles de base pour unifier l'apparence de l'application.
+  Modifie ici pour changer l'apparence globale (couleurs, polices, arrondis, etc.)
+*/
+
+:root {
+  /* Couleurs principales */
+  --primary-color: #1976d2;
+  --primary-color-light: #e3f2fd;
+  --secondary-color: #fff;
+  --border-color: #d0d0d0;
+  --shadow-color: rgba(0,0,0,0.13);
+  --background-color: #f8f9fa;
+  --text-color: #222;
+  --input-bg: #f0f0f0;
+
+  /* Espacements et tailles */
+  --border-radius: 8px;
+  --panel-padding: 16px;
+  --panel-width: 300px;
+  --panel-max-width: 90vw;
+  --panel-max-height: 70vh;
+  --gap: 8px;
+  --small-gap: 4px;
+  --font-size-title: 18px;
+}
+
+body {
+  background: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+}
+
+/* Panels (cartes, modals, etc.) */
+.panel {
+  background: var(--secondary-color);
+  padding: var(--panel-padding);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  width: var(--panel-width);
+  max-width: var(--panel-max-width);
+  max-height: var(--panel-max-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.title {
+  margin: 0 0 var(--gap) 0;
+  font-size: var(--font-size-title);
+  word-break: break-word;
+}
+
+.btn {
+  min-width: 32px;
+  padding: 0.3em 0.6em;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--secondary-color);
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+}
+.btn:hover {
+  background: var(--primary-color-light);
+  border-color: var(--primary-color);
+}
+
+.input {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.3em 0.6em;
+  font-size: 1em;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Utilitaires */
+.flex-row { display: flex; gap: var(--small-gap); }
+.flex-col { display: flex; flex-direction: column; gap: var(--small-gap); }
+.gap { gap: var(--gap); }

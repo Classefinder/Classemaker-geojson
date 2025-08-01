@@ -1,3 +1,4 @@
+import '../feature-name-list.css'; // Styles dédiés FeatureNameList
 import React from 'react';
 
 interface FeatureNameListProps {
@@ -11,23 +12,28 @@ interface FeatureNameListProps {
 
 const FeatureNameList: React.FC<FeatureNameListProps> = ({ layers }) => {
   return (
-    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: 12, marginTop: 16 }}>
+    //
+    // .feature-list-panel : panneau principal
+    // .feature-list-block : bloc d'un calque
+    // .feature-list-title : titre du calque
+    // .feature-list : liste des entités
+    // .feature-list-item : ligne d'entité
+    // .feature-list-name : nom d'entité
+    //
+    <div className="feature-list-panel">
       <h3>Entités (nom)</h3>
       {layers.map(layer => (
-        <div key={layer.info.id} style={{ marginBottom: 8 }}>
-          <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{layer.info.name}</div>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div key={layer.info.id} className="feature-list-block">
+          <div className="feature-list-title">{layer.info.name}</div>
+          <ul className="feature-list">
             {layer.data.features.map((f, idx) => (
-              <li key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                <input
-                  value={f.properties?.name || ''}
-                  onChange={e => layer.onUpdateName(idx, e.target.value)}
-                  style={{ flex: 1, marginRight: 8, cursor: 'pointer' }}
-                  placeholder="Nom"
-                  onClick={() => layer.onSelectFeature(idx)}
-                  readOnly
-                />
-                <button onClick={() => layer.onSelectFeature(idx)} title="Éditer les attributs">✏️</button>
+              <li key={idx} className="feature-list-item">
+                <span
+                  className="feature-list-name"
+                  onClick={() => layer.onSelectFeature?.(idx)}
+                >
+                  {f.properties?.name || `Entité ${idx + 1}`}
+                </span>
               </li>
             ))}
           </ul>

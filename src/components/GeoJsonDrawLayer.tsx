@@ -1,3 +1,4 @@
+import '../geojson-drawlayer.css'; // Styles dédiés GeoJsonDrawLayer
 import React, { useRef, useEffect, useState } from 'react';
 import { FeatureGroup, useMap } from 'react-leaflet';
 import L, { FeatureGroup as LeafletFeatureGroup, Layer as LeafletLayer } from 'leaflet';
@@ -239,10 +240,11 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
     });
   }, [highlight, data]);
 
+  // .draw-snapping-btn : bouton du mode aimant (voir geojson-drawlayer.css)
   return <>
     {category === 'chemin' && (
       <button
-        style={{position:'absolute',top:10,right:10,zIndex:2000,padding:6,background:snapping?'#4caf50':'#ccc',color:snapping?'#fff':'#222',border:'none',borderRadius:4,cursor:'pointer'}}
+        className={snapping ? 'draw-snapping-btn draw-snapping-btn-on' : 'draw-snapping-btn'}
         onClick={()=>setSnapping(s=>!s)}
         title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
       >
