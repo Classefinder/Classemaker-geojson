@@ -6,39 +6,17 @@
 */
 
 :root {
-  /* Couleurs mode clair */
-  --primary-color-light: {
-    --primary-color: #1976d2;
-    --primary-color-light: #e3f2fd;
-    --secondary-color: #fff;
-    --border-color: #d0d0d0;
-    --shadow-color: rgba(0,0,0,0.13);
-    --background-color: #f8f9fa;
-    --text-color: #222;
-    --input-bg: #f0f0f0;
-  }
-
-  /* Couleurs mode sombre */
-  --primary-color-dark: {
-    --primary-color: #90caf9;
-    --primary-color-light: #1e3a5f;
-    --secondary-color: #1e1e1e;
-    --border-color: #404040;
-    --shadow-color: rgba(0,0,0,0.3);
-    --background-color: #121212;
-    --text-color: #e0e0e0;
-    --input-bg: #2a2a2a;
-  }
-
-  /* Couleurs par défaut (mode clair) */
-  --primary-color: #1976d2;
-  --primary-color-light: #e3f2fd;
-  --secondary-color: #fff;
-  --border-color: #d0d0d0;
-  --shadow-color: rgba(0,0,0,0.13);
-  --background-color: #f8f9fa;
-  --text-color: #222;
-  --input-bg: #f0f0f0;
+  /* Thème sombre par défaut */
+  --primary-color: #2196f3;
+  --primary-color-light: #1e3a5f;
+  --secondary-color: #1e1e1e;
+  --border-color: #404040;
+  --shadow-color: rgba(0,0,0,0.5);
+  --background-color: #121212;
+  --text-color: #000000;
+  --input-bg: #2a2a2a;
+  --error-color: #ff5252;
+  --success-color: #4caf50;
 
   /* Espacements et tailles */
   --border-radius: 8px;
@@ -49,20 +27,6 @@
   --gap: 8px;
   --small-gap: 4px;
   --font-size-title: 18px;
-}
-
-/* Mode sombre */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary-color: #90caf9;
-    --primary-color-light: #1e3a5f;
-    --secondary-color: #1e1e1e;
-    --border-color: #404040;
-    --shadow-color: rgba(0,0,0,0.3);
-    --background-color: #121212;
-    --text-color: #e0e0e0;
-    --input-bg: #2a2a2a;
-  }
 }
 
 body {

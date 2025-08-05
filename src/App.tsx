@@ -9,9 +9,13 @@ import AttributeEditor from './components/AttributeEditor';
 import FeatureNameList from './components/FeatureNameList';
 import DistortableImageList from './components/DistortableImageList';
 import type { DistortableImageData } from './components/DistortableImageList';
+import ExportModal from './components/ExportModal';
+import type { ExportOptions } from './components/ExportModal';
+import JSZip from 'jszip';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
+import './export-modal.css';
 
 export type LayerData = {
   info: LayerInfo;
@@ -48,6 +52,8 @@ function App() {
   };
   const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayerId);
   const [selectedFeature, setSelectedFeature] = useState<{ layerId: string; featureIdx: number } | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [customExport, setCustomExport] = useState(false);
   // Gestion de plusieurs images de fond (DistortableImage)
   const [imagesFond, setImagesFond] = useState<DistortableImageData[]>([]);
   const handleImageFondUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,30 +177,128 @@ function App() {
 
 
   // Export MBTiles via serveur Node.js (pour les calques de fond)
-  const exportLayerPbf = async (id: string) => {
-    const layer = layers.find(l => l.info.id === id);
-    if (!layer) return;
-    const data = JSON.stringify(layer.data);
-    const formData = new FormData();
-    formData.append('geojson', new Blob([data], { type: 'application/json' }), `${layer.info.name}.geojson`);
-    try {
-      const res = await fetch('http://localhost:3001/export-pbf', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Erreur serveur');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${layer.info.name}.mbtiles`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      alert('Erreur export MBTiles: ' + (e instanceof Error ? e.message : e));
+  // Export personnalisé ou complet
+  const handleExport = async (options: ExportOptions | null, schoolName: string) => {
+    const zip = new JSZip();
+
+    // Si options est null, c'est un export complet
+    if (!options) {
+      options = {
+        geojson: layers.filter(l => ['salles', 'chemin'].includes(l.info.category)).map(() => true),
+        osrm: true,
+        mbtiles: layers.filter(l => l.info.category === 'fond').map(() => true)
+      };
     }
+
+    // Export GeoJSON
+    const geojsonLayers = layers.filter(l => ['salles', 'chemin'].includes(l.info.category));
+    options.geojson.forEach((shouldExport, idx) => {
+      if (shouldExport) {
+        const layer = geojsonLayers[idx];
+        zip.file(
+          `geojson/${schoolName}/${layer.info.name}.geojson`,
+          JSON.stringify(layer.data, null, 2)
+        );
+      }
+    });
+
+    // Export OSRM
+    if (options.osrm) {
+      const cheminLayers = layers.filter(l => l.info.category === 'chemin');
+      if (cheminLayers.length > 0) {
+        const osm = generateOsmFile(cheminLayers);
+        zip.file(`osrm/${schoolName}/itineraire.osm`, osm);
+      }
+    }
+
+    // Export MBTiles
+    const mbtilesLayers = layers.filter(l => l.info.category === 'fond');
+    for (let i = 0; i < mbtilesLayers.length; i++) {
+      if (options.mbtiles[i]) {
+        const layer = mbtilesLayers[i];
+        try {
+          const formData = new FormData();
+          formData.append('geojson', new Blob([JSON.stringify(layer.data)], { type: 'application/json' }));
+          const res = await fetch('http://localhost:3001/export-pbf', {
+            method: 'POST',
+            body: formData,
+          });
+          if (!res.ok) throw new Error('Erreur serveur');
+          const blob = await res.blob();
+          zip.file(`mbtiles/${schoolName}/${layer.info.name}.mbtiles`, blob);
+        } catch (e) {
+          alert(`Erreur export MBTiles ${layer.info.name}: ${e instanceof Error ? e.message : e}`);
+        }
+      }
+    }
+
+    // Génère et télécharge le zip
+    const content = await zip.generateAsync({type: 'blob'});
+    const url = window.URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${schoolName}-export.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Fonction utilitaire pour générer le fichier OSM
+  const generateOsmFile = (cheminLayers: LayerData[]): string => {
+    let nodeId = -1;
+    let wayId = -1;
+    const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string|number> }[] = [];
+    const ways: { id: number; nodeRefs: number[]; tags: Record<string, string|number> }[] = [];
+    const nodeMap = new Map<string, number>();
+
+    cheminLayers.forEach((layer, layerIdx) => {
+      (layer.data.features || []).forEach(feature => {
+        if (feature.geometry.type === 'LineString') {
+          const coords = feature.geometry.coordinates as [number, number][];
+          const nodeRefs: number[] = [];
+          coords.forEach(([lon, lat]) => {
+            const key = `${lat},${lon}`;
+            let id;
+            if (nodeMap.has(key)) {
+              id = nodeMap.get(key)!;
+            } else {
+              id = nodeId--;
+              nodeMap.set(key, id);
+              nodes.push({ id, lat, lon });
+            }
+            nodeRefs.push(id);
+          });
+          ways.push({
+            id: wayId--,
+            nodeRefs,
+            tags: {
+              bridge: 'yes',
+              layer: layerIdx,
+              foot: 'yes',
+              name: feature.properties?.name || `Chemin ${wayId * -1}`,
+            }
+          });
+        }
+      });
+    });
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<osm version="0.6" generator="ClassefinderGeoJSONMaker">\n`;
+    nodes.forEach(node => {
+      xml += `<node id="${node.id}" lat="${node.lat}" lon="${node.lon}" />\n`;
+    });
+    ways.forEach(way => {
+      xml += `<way id="${way.id}">\n`;
+      way.nodeRefs.forEach(ref => {
+        xml += `  <nd ref="${ref}" />\n`;
+      });
+      Object.entries(way.tags).forEach(([k, v]) => {
+        xml += `  <tag k="${k}" v="${v}" />\n`;
+      });
+      xml += `</way>\n`;
+    });
+    xml += `</osm>`;
+    return xml;
   };
 
   return (
@@ -247,27 +351,42 @@ function App() {
           </div>
           {/* Boutons d'export */}
           <div className="app-section">
-            <div className="app-section-label">Export GeoJSON :</div>
-            {layers.map(l => (
-              <div key={l.info.id} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                <button onClick={() => exportLayer(l.info.id)} className="app-export-btn">
-                  Exporter {l.info.name}
-                </button>
-                {l.info.category === 'fond' && (
-                  <button
-                    onClick={() => exportLayerPbf(l.info.id)}
-                    className="app-export-btn"
-                    style={{ background: '#2d7bba', color: 'white' }}
-                    title="Exporter en MBTiles via Tippecanoe"
-                  >
-                    Export MBTiles
-                  </button>
-                )}
-              </div>
-            ))}
+            <div className="app-section-label">Export :</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button 
+                onClick={() => {
+                  const name = prompt("Nom de l'établissement :");
+                  if (name?.trim()) handleExport(null, name);
+                }} 
+                className="app-export-btn app-export-btn-all"
+              >
+                Tout exporter
+              </button>
+              <button 
+                onClick={() => {
+                  setCustomExport(true);
+                  setShowExportModal(true);
+                }} 
+                className="app-export-btn"
+              >
+                Export personnalisé
+              </button>
+            </div>
           </div>
         </div>
       </div>
+      
+      {/* Modal d'export personnalisé */}
+      {showExportModal && customExport && (
+        <ExportModal
+          layers={layers}
+          onClose={() => {
+            setShowExportModal(false);
+            setCustomExport(false);
+          }}
+          onExport={handleExport}
+        />
+      )}
       {/* Carte plein écran */}
       <div className="app-main">
         <MapContainer center={[48.8588443, 2.2943506]} zoom={13} className="app-map-container">
