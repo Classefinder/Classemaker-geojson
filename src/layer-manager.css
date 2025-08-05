@@ -1,12 +1,13 @@
 /* Styles pour LayerManager (extraits du refactoring) */
 
 .layer-manager-container {
-  background: #ffffff00;
+  background: var(--secondary-color);
   padding: 8px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px var(--shadow-color);
   width: 100%;
   font-size: 14px;
+  color: var(--text-color);
 }
 
 .layer-manager-title {

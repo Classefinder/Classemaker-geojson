@@ -170,7 +170,7 @@ function App() {
 
 
 
-  // Export PBF via serveur Node.js (pour les calques de fond)
+  // Export MBTiles via serveur Node.js (pour les calques de fond)
   const exportLayerPbf = async (id: string) => {
     const layer = layers.find(l => l.info.id === id);
     if (!layer) return;
@@ -187,13 +187,13 @@ function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${layer.info.name}-tiles.zip`;
+      a.download = `${layer.info.name}.mbtiles`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      alert('Erreur export PBF: ' + (e instanceof Error ? e.message : e));
+      alert('Erreur export MBTiles: ' + (e instanceof Error ? e.message : e));
     }
   };
 
@@ -258,9 +258,9 @@ function App() {
                     onClick={() => exportLayerPbf(l.info.id)}
                     className="app-export-btn"
                     style={{ background: '#2d7bba', color: 'white' }}
-                    title="Exporter en tuiles PBF (MBTiles/VectorTiles) via serveur Tippecanoe"
+                    title="Exporter en MBTiles via Tippecanoe"
                   >
-                    Export PBF
+                    Export MBTiles
                   </button>
                 )}
               </div>
