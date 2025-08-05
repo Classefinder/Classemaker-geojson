@@ -1,5 +1,5 @@
-import './app-style-refactor.css'; // Styles extraits pour App
-import { useState } from 'react';
+import './app-style-refactor.css';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { v4 as uuidv4 } from 'uuid';
 import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
@@ -15,12 +15,20 @@ import JSZip from 'jszip';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
-import './export-modal.css';
 
 export type LayerData = {
   info: LayerInfo;
   data: GeoJSON.FeatureCollection;
 };
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
 
 function App() {
   const initialLayerId = uuidv4();
@@ -30,32 +38,12 @@ function App() {
       data: { type: 'FeatureCollection', features: [] },
     },
   ]);
-  // Correction bug build : ajout de updateFeatureName
-  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
-    setLayers(prevLayers =>
-      prevLayers.map(l =>
-        l.info.id === layerId
-          ? {
-              ...l,
-              data: {
-                ...l.data,
-                features: l.data.features.map((f, i) =>
-                  i === featureIdx
-                    ? { ...f, properties: { ...f.properties, name: newName } }
-                    : f
-                ),
-              },
-            }
-          : l
-      )
-    );
-  };
   const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayerId);
   const [selectedFeature, setSelectedFeature] = useState<{ layerId: string; featureIdx: number } | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
   const [customExport, setCustomExport] = useState(false);
-  // Gestion de plusieurs images de fond (DistortableImage)
   const [imagesFond, setImagesFond] = useState<DistortableImageData[]>([]);
+  // Handlers images de fond
   const handleImageFondUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -86,7 +74,7 @@ function App() {
   };
   const handleAttributeChange = (props: Record<string, any>) => {
     if (!selectedFeature) return;
-    setLayers((prevLayers: LayerData[]) => prevLayers.map((l: LayerData) => {
+    setLayers((prevLayers: LayerData[]) => prevLayers.map((l) => {
       if (l.info.id !== selectedFeature.layerId) return l;
       const features = l.data.features.map((f: GeoJSON.Feature, i: number) => i === selectedFeature.featureIdx ? { ...f, properties: props } : f);
       return { ...l, data: { ...l.data, features } };
@@ -135,53 +123,69 @@ function App() {
     }
   };
   const removeLayer = (id: string) => {
-    setLayers(layers.filter(l => l.info.id !== id));
+    setLayers(layers.filter((l: LayerData) => l.info.id !== id));
     if (activeLayerId === id && layers.length > 1) {
       setActiveLayerId(layers.find(l => l.info.id !== id)?.info.id || null);
     }
   };
   const renameLayer = (id: string, name: string) => {
-    setLayers(layers.map(l => l.info.id === id ? { ...l, info: { ...l.info, name } } : l));
+    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, name } } : l));
   };
-
   const setLayerOpacity = (id: string, opacity: number) => {
-    setLayers(layers.map(l => l.info.id === id ? { ...l, info: { ...l.info, opacity } } : l));
+    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, opacity } } : l));
   };
   const toggleLayer = (id: string) => {
-    setLayers(layers.map(l => l.info.id === id ? { ...l, info: { ...l.info, visible: !l.info.visible } } : l));
+    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, visible: !l.info.visible } } : l));
   };
   const selectLayer = (id: string) => setActiveLayerId(id);
-
-  // Mise à jour des données GeoJSON d'un calque
   const updateLayerData = (id: string, data: GeoJSON.FeatureCollection) => {
-    setLayers(layers.map(l => l.info.id === id ? { ...l, data } : l));
+    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, data } : l));
   };
 
-
-
-  // Export d'un calque
-  const exportLayer = (id: string) => {
-    const layer = layers.find(l => l.info.id === id);
-    if (!layer) return;
-    const data = JSON.stringify(layer.data, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${layer.info.name}.geojson`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // Import ZIP global
+  const handleImportZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const zip = await JSZip.loadAsync(file);
+      let root = '';
+      zip.forEach((relPath: string) => {
+        const match = relPath.match(/^geojson\/([^/]+)\//);
+        if (match) root = match[1];
+      });
+      if (!root) {
+        alert('Structure ZIP invalide.');
+        return;
+      }
+      const geojsonFiles = zip.file(new RegExp(`^geojson/${root}/.+\\.geojson$`));
+      for (const f of geojsonFiles) {
+        const text = await f.async('text');
+        const data = JSON.parse(text);
+        if (data.type !== 'FeatureCollection') continue;
+        let cat: LayerCategory = 'salles';
+        if (/chemin/i.test(f.name)) cat = 'chemin';
+        if (/fond/i.test(f.name)) cat = 'fond';
+        const name = f.name.split('/').pop()?.replace(/\.geojson$/, '') || 'import';
+        const newId = uuidv4();
+        setLayers((prev: LayerData[]) => [...prev, { info: { id: newId, name, visible: true, category: cat, features: [] }, data }]);
+      }
+      const osmFiles = zip.file(new RegExp(`^osrm/${root}/.+\\.osm$`));
+      if (osmFiles.length > 0) {
+        alert('Import OSM non supporté pour le moment.');
+      }
+      const mbtilesFiles = zip.file(new RegExp(`^mbtiles/${root}/.+\\.mbtiles$`));
+      if (mbtilesFiles.length > 0) {
+        alert('Import MBTiles non supporté côté client.');
+      }
+      e.target.value = '';
+    } catch (err) {
+      alert('Erreur lors de l\'import ZIP : ' + (err instanceof Error ? err.message : err));
+    }
   };
 
-
-
-
-  // Export MBTiles via serveur Node.js (pour les calques de fond)
-  // Export personnalisé ou complet
+  // Export ZIP (ajoute .geojson pour chaque fond de carte)
   const handleExport = async (options: ExportOptions | null, schoolName: string) => {
     const zip = new JSZip();
-
-    // Si options est null, c'est un export complet
     if (!options) {
       options = {
         geojson: layers.filter(l => ['salles', 'chemin'].includes(l.info.category)).map(() => true),
@@ -189,10 +193,8 @@ function App() {
         mbtiles: layers.filter(l => l.info.category === 'fond').map(() => true)
       };
     }
-
-    // Export GeoJSON
     const geojsonLayers = layers.filter(l => ['salles', 'chemin'].includes(l.info.category));
-    options.geojson.forEach((shouldExport, idx) => {
+    options.geojson.forEach((shouldExport: boolean, idx: number) => {
       if (shouldExport) {
         const layer = geojsonLayers[idx];
         zip.file(
@@ -201,8 +203,13 @@ function App() {
         );
       }
     });
-
-    // Export OSRM
+    const fondLayers = layers.filter(l => l.info.category === 'fond');
+    fondLayers.forEach(layer => {
+      zip.file(
+        `geojson/${schoolName}/${layer.info.name}.geojson`,
+        JSON.stringify(layer.data, null, 2)
+      );
+    });
     if (options.osrm) {
       const cheminLayers = layers.filter(l => l.info.category === 'chemin');
       if (cheminLayers.length > 0) {
@@ -210,8 +217,6 @@ function App() {
         zip.file(`osrm/${schoolName}/itineraire.osm`, osm);
       }
     }
-
-    // Export MBTiles
     const mbtilesLayers = layers.filter(l => l.info.category === 'fond');
     for (let i = 0; i < mbtilesLayers.length; i++) {
       if (options.mbtiles[i]) {
@@ -231,8 +236,6 @@ function App() {
         }
       }
     }
-
-    // Génère et télécharge le zip
     const content = await zip.generateAsync({type: 'blob'});
     const url = window.URL.createObjectURL(content);
     const a = document.createElement('a');
@@ -244,14 +247,78 @@ function App() {
     window.URL.revokeObjectURL(url);
   };
 
-  // Fonction utilitaire pour générer le fichier OSM
-  const generateOsmFile = (cheminLayers: LayerData[]): string => {
+  // Gestion import calque (GeoJSON, MBTiles, OSM)
+  useEffect(() => {
+    function handler(evt: Event) {
+      const e = evt as CustomEvent<{ file: File; category: LayerCategory }>;
+      (async () => {
+        const { file, category } = e.detail;
+        if (!file) return;
+        let data: any = null;
+        let name = file.name.replace(/\.(geojson|json|mbtiles|osm)$/i, '');
+        if (file.name.endsWith('.geojson') || file.name.endsWith('.json')) {
+          const text = await readFileAsText(file);
+          try {
+            data = JSON.parse(text);
+          } catch {
+            alert('Fichier GeoJSON invalide');
+            return;
+          }
+        } else if (file.name.endsWith('.osm')) {
+          alert('Import OSM non supporté pour le moment.');
+          return;
+        } else if (file.name.endsWith('.mbtiles')) {
+          alert('Import MBTiles non supporté côté client. Veuillez fournir un GeoJSON.');
+          return;
+        } else {
+          alert('Format non supporté.');
+          return;
+        }
+        if (!data || data.type !== 'FeatureCollection') {
+          alert('Le fichier doit être un FeatureCollection GeoJSON.');
+          return;
+        }
+        const newId = uuidv4();
+        const newLayer: LayerData = {
+          info: { id: newId, name, visible: true, category, features: [] },
+          data,
+        };
+        setLayers(prev => [...prev, newLayer]);
+        setActiveLayerId(newId);
+      })();
+    }
+    window.addEventListener('import-layer', handler);
+    return () => window.removeEventListener('import-layer', handler);
+  }, []);
+
+  // updateFeatureName
+  const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
+    setLayers(prevLayers =>
+      prevLayers.map(l =>
+        l.info.id === layerId
+          ? {
+              ...l,
+              data: {
+                ...l.data,
+                features: l.data.features.map((f, i) =>
+                  i === featureIdx
+                    ? { ...f, properties: { ...f.properties, name: newName } }
+                    : f
+                ),
+              },
+            }
+          : l
+      )
+    );
+  };
+
+  // Génération OSM (reprendre la fonction existante generateOsmFile)
+  function generateOsmFile(cheminLayers: LayerData[]): string {
     let nodeId = -1;
     let wayId = -1;
     const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string|number> }[] = [];
     const ways: { id: number; nodeRefs: number[]; tags: Record<string, string|number> }[] = [];
     const nodeMap = new Map<string, number>();
-
     cheminLayers.forEach((layer, layerIdx) => {
       (layer.data.features || []).forEach(feature => {
         if (feature.geometry.type === 'LineString') {
@@ -282,7 +349,6 @@ function App() {
         }
       });
     });
-
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<osm version="0.6" generator="ClassefinderGeoJSONMaker">\n`;
     nodes.forEach(node => {
       xml += `<node id="${node.id}" lat="${node.lat}" lon="${node.lon}" />\n`;
@@ -299,13 +365,23 @@ function App() {
     });
     xml += `</osm>`;
     return xml;
-  };
+  }
 
+  // --- RENDER ---
   return (
+// ...existing code...
     <div className="app-root">
       {/* Panneau latéral */}
       <div className="app-sidebar">
         <div className="app-sidebar-content">
+          {/* Import ZIP global */}
+          <div className="app-section">
+            <label className="app-section-label">Importer un ZIP :</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="file" accept=".zip,application/zip" style={{ display: 'none' }} onChange={handleImportZip} />
+              <span className="app-import-zip-btn" style={{ fontSize: 18, padding: '2px 6px', border: '1px solid #ccc', borderRadius: 4, background: '#f7f7f7' }}>📦 Import ZIP</span>
+            </label>
+          </div>
           <LayerManager
             layers={layers}
             activeLayerId={activeLayerId}
@@ -375,7 +451,6 @@ function App() {
           </div>
         </div>
       </div>
-      
       {/* Modal d'export personnalisé */}
       {showExportModal && customExport && (
         <ExportModal

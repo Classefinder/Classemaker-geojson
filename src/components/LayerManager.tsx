@@ -142,7 +142,26 @@ const LayerManager: React.FC<LayerManagerProps> = ({
               </li>
             ))}
           </ul>
-          <button onClick={() => onAddLayer(cat)} className="layer-add-btn">➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <button onClick={() => onAddLayer(cat)} className="layer-add-btn">➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
+            <label className="layer-import-label" style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+              <input
+                type="file"
+                accept=".geojson,.json,.mbtiles,.osm,application/geo+json,application/json,application/vnd.mapbox-vector-tile"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    // On délègue la gestion à App via un event custom
+                    const importEvent = new CustomEvent('import-layer', { detail: { file, category: cat } });
+                    window.dispatchEvent(importEvent);
+                    e.target.value = '';
+                  }
+                }}
+              />
+              <span className="layer-import-btn" title="Importer GeoJSON/MBTiles/OSM" style={{ fontSize: 18, padding: '2px 6px', border: '1px solid #ccc', borderRadius: 4, background: '#f7f7f7' }}>📥 Importer</span>
+            </label>
+          </div>
           {cat === 'chemin' && (
             <button onClick={() => setShowExportModal(true)} className="layer-export-btn">
               📤 Export Itinéraire

@@ -41,16 +41,6 @@
   }
 }
 
-  /* Espacements et tailles */
-  --border-radius: 8px;
-  --panel-padding: 16px;
-  --panel-width: 300px;
-  --panel-max-width: 90vw;
-  --panel-max-height: 70vh;
-  --gap: 8px;
-  --small-gap: 4px;
-  --font-size-title: 18px;
-}
 
 body {
   background: var(--background-color);
