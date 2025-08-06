@@ -244,7 +244,7 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
   return <>
     {category === 'chemin' && (
       <button
-        className={snapping ? 'draw-snapping-btn draw-snapping-btn-on' : 'draw-snapping-btn'}
+        className={`btn draw-snapping-btn ${snapping ? 'draw-snapping-btn-on' : ''}`}
         onClick={()=>setSnapping(s=>!s)}
         title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
       >

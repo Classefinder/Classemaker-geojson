@@ -49,8 +49,8 @@ const ItineraryExportModal: React.FC<ItineraryExportModalProps> = ({ layers, onC
             </li>
           ))}
         </ul>
-        <button onClick={handleExport} className="export-modal-btn export-modal-btn-export">Exporter</button>
-        <button onClick={onClose} className="export-modal-btn export-modal-btn-cancel">Annuler</button>
+        <button onClick={handleExport} className="btn btn-primary">Exporter</button>
+        <button onClick={onClose} className="btn">Annuler</button>
       </div>
     </div>
   );

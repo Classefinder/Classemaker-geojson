@@ -57,7 +57,7 @@ const AttributeEditor: React.FC<AttributeEditorProps> = ({ properties, onChange 
             <input value={key} disabled className="attr-key" />
             <div className="attr-value-row">
               <input value={value} onChange={e => handleChange(key, e.target.value)} className="attr-value" />
-              <button onClick={() => handleRemove(key)} className="attr-remove-btn">🗑️</button>
+              <button onClick={() => handleRemove(key)} className="btn btn-danger">🗑️</button>
             </div>
           </li>
         ))}
@@ -65,7 +65,7 @@ const AttributeEditor: React.FC<AttributeEditorProps> = ({ properties, onChange 
       <div className="attr-add-row">
         <input placeholder="Clé" value={newKey} onChange={e => setNewKey(e.target.value)} className="attr-add-key" />
         <input placeholder="Valeur" value={newValue} onChange={e => setNewValue(e.target.value)} className="attr-add-value" />
-        <button onClick={handleAdd} className="attr-add-btn">➕</button>
+        <button onClick={handleAdd} className="btn btn-primary">➕</button>
       </div>
     </div>
   );

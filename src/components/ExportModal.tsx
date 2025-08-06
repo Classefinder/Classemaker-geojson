@@ -97,10 +97,10 @@ const ExportModal: React.FC<ExportModalProps> = ({ layers, onClose, onExport }) 
         </div>
 
         <div className="modal-buttons">
-          <button onClick={handleExport} className="modal-btn modal-btn-export">
+          <button onClick={handleExport} className="btn btn-primary">
             Exporter
           </button>
-          <button onClick={onClose} className="modal-btn modal-btn-cancel">
+          <button onClick={onClose} className="btn">
             Annuler
           </button>
         </div>

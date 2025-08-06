@@ -59,17 +59,8 @@
 .app-image-btn {
   margin-left: 6px;
   font-size: 13px;
-  border-radius: 6px;
-  border: 1px solid #d0d0d0;
-  padding: 0.3em 0.7em;
-  background: #fff;
-  cursor: pointer;
-  transition: background 0.2s, border 0.2s;
 }
-.app-image-btn:hover {
-  background: #e3f2fd;
-  border-color: #1976d2;
-}
+
 .app-image-btn-delete {
   color: red;
 }
@@ -78,10 +69,7 @@
   width: 100%;
   margin-bottom: 8px;
   font-size: 14px;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  padding: 0.6em 1.2em;
-  background: var(--secondary-color);
+}
   color: var(--text-color);
   cursor: pointer;
   transition: all 0.2s ease;

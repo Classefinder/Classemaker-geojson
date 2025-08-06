@@ -137,13 +137,13 @@ const LayerManager: React.FC<LayerManagerProps> = ({
                 <button onClick={() => {
                   const newName = prompt('Nouveau nom du calque', layer.info.name);
                   if (newName) onRenameLayer(layer.info.id, newName);
-                }} className="layer-btn">✏️</button>
-                <button onClick={() => onRemoveLayer(layer.info.id)} className="layer-btn">🗑️</button>
+                }} className="btn">✏️</button>
+                <button onClick={() => onRemoveLayer(layer.info.id)} className="btn">🗑️</button>
               </li>
             ))}
           </ul>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-            <button onClick={() => onAddLayer(cat)} className="layer-add-btn">➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
+            <button onClick={() => onAddLayer(cat)} className="btn btn-primary">➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
             <label className="layer-import-label" style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
               <input
                 type="file"
@@ -159,11 +159,11 @@ const LayerManager: React.FC<LayerManagerProps> = ({
                   }
                 }}
               />
-              <span className="layer-import-btn" title="Importer GeoJSON/MBTiles/OSM" style={{ fontSize: 18, padding: '2px 6px', border: '1px solid #ccc', borderRadius: 4, background: '#f7f7f7' }}>📥 Importer</span>
+              <button className="btn" title="Importer GeoJSON/MBTiles/OSM">📥 Importer</button>
             </label>
           </div>
           {cat === 'chemin' && (
-            <button onClick={() => setShowExportModal(true)} className="layer-export-btn">
+            <button onClick={() => setShowExportModal(true)} className="btn btn-success">
               📤 Export Itinéraire
             </button>
           )}

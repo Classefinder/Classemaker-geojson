@@ -379,7 +379,7 @@ function App() {
             <label className="app-section-label">Importer un ZIP :</label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
               <input type="file" accept=".zip,application/zip" style={{ display: 'none' }} onChange={handleImportZip} />
-              <span className="app-import-zip-btn" style={{ fontSize: 18, padding: '2px 6px', border: '1px solid #ccc', borderRadius: 4, background: '#f7f7f7' }}>📦 Import ZIP</span>
+              <button className="btn">📦 Import ZIP</button>
             </label>
           </div>
           <LayerManager
@@ -434,7 +434,7 @@ function App() {
                   const name = prompt("Nom de l'établissement :");
                   if (name?.trim()) handleExport(null, name);
                 }} 
-                className="app-export-btn app-export-btn-all"
+                className="btn btn-primary"
               >
                 Tout exporter
               </button>
@@ -443,7 +443,7 @@ function App() {
                   setCustomExport(true);
                   setShowExportModal(true);
                 }} 
-                className="app-export-btn"
+                className="btn"
               >
                 Export personnalisé
               </button>

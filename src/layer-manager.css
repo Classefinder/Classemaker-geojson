@@ -64,47 +64,16 @@
 
 .layer-btn {
   margin-left: 2px;
-  border-radius: 6px;
-  border: 1px solid #d0d0d0;
-  padding: 0.3em 0.7em;
-  font-size: 1em;
-  background: #fff;
-  cursor: pointer;
-  transition: background 0.2s, border 0.2s;
-}
-.layer-btn:hover {
-  background: #e3f2fd;
-  border-color: #1976d2;
 }
 
 .layer-add-btn {
   width: 100%;
   margin-top: 2px;
   font-size: 13px;
-  border-radius: 6px;
-  border: 1px solid #d0d0d0;
-  padding: 0.5em 1em;
-  background: #fff;
-  cursor: pointer;
-  transition: background 0.2s, border 0.2s;
-}
-.layer-add-btn:hover {
-  background: #e3f2fd;
-  border-color: #1976d2;
 }
 
 .layer-export-btn {
   width: 100%;
   margin-top: 2px;
   font-size: 13px;
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5em 1em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.layer-export-btn:hover {
-  background: #388e3c;
 }

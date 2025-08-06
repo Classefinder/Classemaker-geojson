@@ -65,33 +65,4 @@
   justify-content: flex-end;
 }
 
-.modal-btn {
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  min-width: 100px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.modal-btn-export {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-}
-
-.modal-btn-export:hover {
-  background: var(--primary-color);
-  opacity: 0.9;
-}
-
-.modal-btn-cancel {
-  background: var(--secondary-color);
-  color: var(--text-color);
-}
-
-.modal-btn-cancel:hover {
-  background: var(--primary-color-light);
-  border-color: var(--primary-color);
-}
+/* Les boutons modaux utilisent les styles globaux via les classes .btn et .btn-* */
