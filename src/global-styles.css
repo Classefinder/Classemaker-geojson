@@ -78,7 +78,7 @@ body {
   padding: 0.5em 1.2em;
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  background: var(--secondary-color);
+  background-color: var(--secondary-color) !important; /* Forcé la couleur de fond */
   color: var(--text-color);
   font-size: 1em;
   font-family: inherit;
@@ -92,20 +92,27 @@ body {
 
 /* Variantes de boutons */
 .btn-primary {
-  background: var(--primary-color);
-  color: white;
+  background-color: var(--primary-color) !important;
+  color: white !important;
   border: none;
 }
 
 .btn-danger {
-  background: var(--error-color);
-  color: white;
+  background-color: var(--error-color) !important;
+  color: white !important;
   border: none;
 }
 
 .btn-success {
-  background: var(--success-color);
-  color: white;
+  background-color: var(--success-color) !important;
+  color: white !important;
+  border: none;
+}
+
+/* Bouton aimant actif */
+.btn-magnet-on {
+  background-color: var(--success-color) !important;
+  color: white !important;
   border: none;
 }
 
@@ -125,19 +132,7 @@ body {
   pointer-events: none;
 }
 
-.btn:hover, button:hover, .app-export-btn:hover, .modal-btn:hover, .layer-btn:hover, .attr-add-btn:hover, .attr-remove-btn:hover, .app-image-btn:hover, .app-attribute-btn:hover {
-  background: #181a1b;
-  border-color: var(--primary-color);
-  color: #fff;
-  box-shadow: 0 2px 8px var(--shadow-color);
-}
-.btn:active, button:active, .app-export-btn:active, .modal-btn:active, .layer-btn:active, .attr-add-btn:active, .attr-remove-btn:active, .app-image-btn:active, .app-attribute-btn:active {
-  filter: brightness(0.95);
-}
-.btn[disabled], button[disabled], .app-export-btn[disabled], .modal-btn[disabled], .layer-btn[disabled], .attr-add-btn[disabled], .attr-remove-btn[disabled], .app-image-btn[disabled], .app-attribute-btn[disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Supprimé les styles en double car déjà définis plus haut */
 
 .input {
   background: var(--input-bg);

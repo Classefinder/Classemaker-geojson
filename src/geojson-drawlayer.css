@@ -1,22 +1,19 @@
 /* Styles pour GeoJsonDrawLayer (bouton aimant) */
 
-.draw-snapping-btn.btn {
-  position: absolute !important;
+.draw-snapping-btn {
+  position: absolute;
   top: 10px;
   right: 10px;
   z-index: 2000;
-  min-width: unset !important;
-  padding: 0.5em 1em;
+  min-width: unset;
 }
 
-.draw-snapping-btn.btn.draw-snapping-btn-on {
-  background: var(--success-color) !important;
-  color: white !important;
-  border: none !important;
+.draw-snapping-btn:not(.draw-snapping-btn-on) {
+  background: var(--secondary-color);
 }
 
-/* Surcharge l'effet hover pour le mode activé */
-.draw-snapping-btn.btn.draw-snapping-btn-on:hover {
-  background: var(--success-color) !important;
-  filter: brightness(1.1);
+.draw-snapping-btn-on {
+  background: var(--success-color);
+  color: white;
+  border: none;
 }
