@@ -31,6 +31,17 @@ function readFileAsText(file: File): Promise<string> {
 }
 
 function App() {
+  // Fond de carte dynamique selon le thème
+  const getTileUrl = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'https://tiles.stadiamaps.com/tiles/alidade_dark/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const [tileUrl, setTileUrl] = useState(getTileUrl());
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => setTileUrl(getTileUrl());
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
   const initialLayerId = uuidv4();
   const [layers, setLayers] = useState<LayerData[]>([
     {
@@ -397,7 +408,7 @@ function App() {
             <label className="app-section-label">Images de fond :</label>
             <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
             {imagesFond.length > 0 && (
-              <div className="app-image-list">
+          <div className="app-image-list panel">
                 {imagesFond.map(img => (
                   <div key={img.id} className="app-image-item">
                     <span className="app-image-name">{img.url.split('/').pop()}</span>
@@ -411,7 +422,7 @@ function App() {
             )}
           </div>
           {/* Attributs des calques visibles */}
-          <div className="app-section">
+          <div className="app-section panel">
             <div className="app-section-label">Attributs des calques visibles :</div>
             {layers.filter(l => l.info.visible).map(l => (
               <FeatureNameList
@@ -465,9 +476,10 @@ function App() {
       {/* Carte plein écran */}
       <div className="app-main">
         <MapContainer center={[48.8588443, 2.2943506]} zoom={13} className="app-map-container">
+          {/* Fond de carte OSM qui s'adapte au thème */}
           <TileLayer
             attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url={tileUrl}
           />
           {/* Images de fond manipulables (DistortableImageList) */}
           <DistortableImageList images={imagesFond} onUpdate={updateImageFond} />

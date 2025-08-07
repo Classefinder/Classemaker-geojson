@@ -40,7 +40,14 @@
   transition: background 0.2s;
 }
 .layer-list-item.active {
-  background: #e3f2fd;
+  background: var(--primary-color-light);
+  color: var(--text-color);
+}
+@media (prefers-color-scheme: dark) {
+  .layer-list-item.active {
+    background: #263245;
+    color: #fff;
+  }
 }
 
 .layer-checkbox {

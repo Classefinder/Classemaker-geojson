@@ -41,12 +41,16 @@
 
 .app-image-list {
   margin-top: 6px;
+  background: var(--secondary-color);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
 }
 
 .app-image-item {
   display: flex;
   align-items: center;
   margin-bottom: 4px;
+  background: transparent;
 }
 
 .app-image-name {
@@ -59,6 +63,21 @@
 .app-image-btn {
   margin-left: 6px;
   font-size: 13px;
+}
+
+input[type="file"], .app-image-list input[type="file"] {
+  background: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.4em 0.7em;
+}
+@media (prefers-color-scheme: dark) {
+  input[type="file"], .app-image-list input[type="file"] {
+    background: #23272e;
+    color: #e0e0e0;
+    border: 1px solid #404040;
+  }
 }
 
 .app-image-btn-delete {

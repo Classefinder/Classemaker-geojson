@@ -10,7 +10,7 @@ body, html, #root {
   margin: 0;
   padding: 0;
   font-family: 'Inter', Arial, sans-serif;
-  background: #f7f7fa;
+  background: var(--background-color);
 }
 
 .logo {
@@ -55,11 +55,31 @@ body, html, #root {
   max-width: 320px;
   height: 100vh;
   overflow-y: auto;
-  background: #f7f7fa;
-  border-right: 1px solid #e0e0e0;
+  background: var(--background-color);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   padding: 0;
+}
+.app-image-list, .app-image-item {
+  background: var(--secondary-color);
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+}
+
+.app-attribute-panel {
+  background: var(--secondary-color);
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  padding: var(--panel-padding);
+  margin: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .leaflet-container {
+    background: #181a1b;
+  }
 }
 
 .app-sidebar > div {
