@@ -1,4 +1,5 @@
 import '../geojson-drawlayer.css'; // Styles dédiés GeoJsonDrawLayer
+import '../geojson-categories.css'; // Styles par catégorie de calque
 import React, { useRef, useEffect, useState } from 'react';
 import { FeatureGroup, useMap } from 'react-leaflet';
 import L, { FeatureGroup as LeafletFeatureGroup, Layer as LeafletLayer } from 'leaflet';
@@ -217,23 +218,35 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
         // @ts-ignore
         layer.setStyle({ opacity: opacity ?? 1, fillOpacity: opacity ?? 1 });
       }
+      // Ajoute la classe CSS selon la catégorie (pour SVG)
+      // @ts-ignore
+      if (layer._path && category) {
+        let className = '';
+        if (category === 'salles') className = 'geojson-salles';
+        else if (category === 'chemin') className = 'geojson-chemin';
+        else if (category === 'fond') className = 'geojson-fond';
+        if (className) {
+          // @ts-ignore
+          layer._path.classList.add(className);
+        }
+      }
       idx++;
     });
-  }, [data, onFeatureClick, opacity]);
+  }, [data, onFeatureClick, opacity, category]);
 
   // Surlignage de la feature sélectionnée
   useEffect(() => {
     if (!fgRef.current) return;
     let idx = 0;
     fgRef.current.eachLayer((layer: LeafletLayer) => {
-      // @ts-ignore
-      if (layer.setStyle) {
+      // Surlignage uniquement pour les layers de type Path (Polygon, Polyline, etc.)
+      if ((layer as L.Path).setStyle) {
+        const pathLayer = layer as L.Path;
         if (typeof highlight === 'number' && idx === highlight) {
-          // @ts-ignore
-          layer.setStyle({ color: '#ff5722', weight: 5, opacity: 1 });
+          // Surlignage jaune vif, très visible
+          pathLayer.setStyle({ color: '#FFD600', weight: 7, opacity: 1, fillOpacity: 0.7 });
         } else {
-          // @ts-ignore
-          layer.setStyle({ color: '#1976d2', weight: 2, opacity: 0.8 });
+          pathLayer.setStyle({ color: '#1976d2', weight: 2, opacity: 0.8 });
         }
       }
       idx++;

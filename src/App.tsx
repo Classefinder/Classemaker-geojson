@@ -471,20 +471,27 @@ function App() {
           />
           {/* Images de fond manipulables (DistortableImageList) */}
           <DistortableImageList images={imagesFond} onUpdate={updateImageFond} />
-          {layers.map(l => (
-            <GeoJsonDrawLayer
-              key={l.info.id}
-              data={l.data}
-              onChange={data => updateLayerData(l.info.id, data)}
-              active={activeLayerId === l.info.id}
-              visible={l.info.visible}
-              onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
-              allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
-              highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
-              category={l.info.category}
-              opacity={l.info.opacity ?? 1}
-            />
-          ))}
+          {/* Affichage des calques dans l'ordre fond < salles < chemin */}
+          {layers
+            .slice()
+            .sort((a, b) => {
+              const order = { fond: 0, salles: 1, chemin: 2 };
+              return order[a.info.category] - order[b.info.category];
+            })
+            .map(l => (
+              <GeoJsonDrawLayer
+                key={l.info.id}
+                data={l.data}
+                onChange={data => updateLayerData(l.info.id, data)}
+                active={activeLayerId === l.info.id}
+                visible={l.info.visible}
+                onFeatureClick={idx => handleFeatureClick(l.info.id, idx)}
+                allLayersData={layers.filter(ll => ll.info.visible).map(ll => ll.data)}
+                highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
+                category={l.info.category}
+                opacity={l.info.opacity ?? 1}
+              />
+            ))}
         </MapContainer>
         {/* Panneau d'édition des attributs + suppression entité */}
         {selectedFeature && (() => {
