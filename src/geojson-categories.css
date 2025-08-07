@@ -1,3 +1,11 @@
+/* Surlignage jaune vif pour la forme sélectionnée */
+.geojson-selected {
+    fill: #ffea7e !important;
+  stroke: #FFD600 !important;
+  stroke-width: 7px !important;
+  /* Optionnel : effet de halo */
+  filter: drop-shadow(0 0 6px #FFD60088);
+}
 /* Styles pour les différentes catégories de calques GeoJSON */
 
 .geojson-salles {

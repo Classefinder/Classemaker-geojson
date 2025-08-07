@@ -240,13 +240,15 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
     let idx = 0;
     fgRef.current.eachLayer((layer: LeafletLayer) => {
       // Surlignage uniquement pour les layers de type Path (Polygon, Polyline, etc.)
-      if ((layer as L.Path).setStyle) {
-        const pathLayer = layer as L.Path;
+      // Ajoute/retire la classe CSS geojson-selected pour garantir le style
+      // @ts-ignore
+      if (layer._path) {
         if (typeof highlight === 'number' && idx === highlight) {
-          // Surlignage jaune vif, très visible
-          pathLayer.setStyle({ color: '#FFD600', weight: 7, opacity: 1, fillOpacity: 0.7 });
+          // @ts-ignore
+          layer._path.classList.add('geojson-selected');
         } else {
-          pathLayer.setStyle({ color: '#1976d2', weight: 2, opacity: 0.8 });
+          // @ts-ignore
+          layer._path.classList.remove('geojson-selected');
         }
       }
       idx++;
