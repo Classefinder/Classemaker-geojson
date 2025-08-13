@@ -41,8 +41,8 @@ const LayerManager: React.FC<LayerManagerProps> = ({
     const cheminLayers = layers.filter(layer => layer.info.category === 'chemin');
     let nodeId = -1;
     let wayId = -1;
-    const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string|number> }[] = [];
-    const ways: { id: number; nodeRefs: number[]; tags: Record<string, string|number> }[] = [];
+    const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string | number> }[] = [];
+    const ways: { id: number; nodeRefs: number[]; tags: Record<string, string | number> }[] = [];
     const nodeMap = new Map<string, number>(); // key: 'lat,lon' => nodeId
 
     cheminLayers.forEach((layer, layerIdx) => {
@@ -120,6 +120,13 @@ const LayerManager: React.FC<LayerManagerProps> = ({
   // .layer-add-btn : bouton ajouter calque
   // .layer-export-btn : bouton export itinéraire
 
+  // Pour chaque catégorie, on crée une ref pour l'input file
+  const fileInputRefs = {
+    salles: React.createRef<HTMLInputElement>(),
+    chemin: React.createRef<HTMLInputElement>(),
+    fond: React.createRef<HTMLInputElement>(),
+  };
+
   return (
     <div className="layer-manager-container">
       <h3 className="layer-manager-title">Calques</h3>
@@ -144,8 +151,9 @@ const LayerManager: React.FC<LayerManagerProps> = ({
           </ul>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
             <button onClick={() => onAddLayer(cat)} className="btn btn-primary">➕ Ajouter {cat === 'salles' ? 'salle' : cat === 'chemin' ? 'chemin' : 'fond'}</button>
-            <label className="layer-import-label" style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <div className="layer-import-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <input
+                ref={fileInputRefs[cat]}
                 type="file"
                 accept=".geojson,.json,.mbtiles,.osm,application/geo+json,application/json,application/vnd.mapbox-vector-tile"
                 style={{ display: 'none' }}
@@ -159,8 +167,14 @@ const LayerManager: React.FC<LayerManagerProps> = ({
                   }
                 }}
               />
-              <button className="btn" title="Importer GeoJSON/MBTiles/OSM">📥 Importer</button>
-            </label>
+              <button
+                className="btn"
+                title="Importer GeoJSON/MBTiles/OSM"
+                onClick={() => fileInputRefs[cat].current?.click()}
+              >
+                📥 Importer
+              </button>
+            </div>
           </div>
           {cat === 'chemin' && (
             <button onClick={() => setShowExportModal(true)} className="btn btn-success">
