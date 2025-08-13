@@ -570,7 +570,7 @@ function App() {
       )}
       {/* Carte plein écran */}
       <div className="app-main">
-        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} maxZoom={20} className="app-map-container">
+        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} maxZoom={25} className="app-map-container">
           {/* Fond de carte vectoriel MapTiler via MapTiler SDK, style dynamique */}
           <MapTilerVectorLayer apiKey={mapTilerApiKey} style={mapTilerStyle} />
           {/* Images de fond manipulables (DistortableImageList) */}
