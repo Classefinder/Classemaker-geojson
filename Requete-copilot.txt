@@ -1,0 +1,88 @@
+Je vais te demander quelquechose de très compliqué :
+Je veux déjà que tu change le nom d'un dossier dans le zip d'export. Je veux que le dossier mbtiles devienne tileserver-gl
+Par contre, le contenu généré via le serveur nodejs va donc dans ce dossier.
+Si tu as compris, je veux générer les fichiers de config et de style pour un serveur tileserver-gl.
+Il me faut donc, autant de fichier de style.json qu'il y a de calque dans la catégorie fond de carte. Chaque fichier est dans son dossier qui est de la forme :
+ tilserver-gl(dossier) --> [NOM DE L'ETABLISSEMENT](dossier) (contenu du dossier tileserver-gl) --> (contenu du dossier [NOM DE L'ETABLISSEMENT]) config.json style(dossier) --> (dans le dossier style, d'autre dossier qui ont chaqun le nom de leur calque de la catéogrie fond de carte et dans chaque dossier, un fichier style.json)
+Il faut que les fichiers styles ressemblent à cela :
+
+style.json (exemple) :
+{
+  "version": 8,
+  "name": "Minimal",
+  "sources": {
+    "custom-tiles": {
+      "type": "vector",
+      "url": "mbtiles://[VARIABLE A METTRE ICI EN FONCTION DU NOM DU CALQUE]"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#ffffff00" }
+    },
+    {
+      "id": "bg-fill",
+      "type": "fill",
+      "source": "custom-tiles",
+      "source-layer": "bg",
+      "paint": {
+        "fill-color": "#ffffff",
+        "fill-opacity": 1
+      }
+    },
+    {
+      "id": "bg-outline",
+      "type": "line",
+      "source": "custom-tiles",
+      "source-layer": "bg",
+      "paint": {
+        "line-color": "#4e4e4e",
+        "line-width": 4
+      }
+    }
+  ]
+}
+
+Ce que j'ai mis entre crochet est le paramètre à générer. C'est en faite le nom du calque de la catégorie fond de carte, se sera par exemple étage1, rez de chaussé...
+
+Et donc il faut aussi le fichier config.json qui se trouve juste dans le dossier tileserver-gl. Il faut qu'il ressemble à cela :
+{
+  "options": {
+    "paths": {
+      "fonts": "fonts",
+      "styles": "styles"
+    }
+  },
+  "styles": {
+    "[VARIABLE A METTRE ICI EN FONCTION DU NOM DES CALQUES]": {
+      "style": "[VARIABLE A METTRE ICI EN FONCTION DU NOM DES CALQUES]/style.json",
+      "tilejson": {
+        "type": "overlay",
+        "bounds": [8.529446, 47.364758, 8.55232, 47.380539]
+      }
+    },
+    "[VARIABLE A METTRE ICI EN FONCTION DU NOM DES CALQUES]": {
+      "style": "[VARIABLE A METTRE ICI EN FONCTION DU NOM DES CALQUES]/style.json",
+      "tilejson": {
+        "type": "overlay",
+        "bounds": [8.529446, 47.364758, 8.55232, 47.380539]
+      }
+    }
+  },
+  "data": {
+    "[VARIABLE A METTRE ICI EN FONCTION DU NOM DES CALQUES]": {
+      "mbtiles": "[NOM DES FICHIERS DE DONNEES DE FOND DE CARTE QUI SE TROUVENT DANS LE DOSSIER].mbtiles"
+    }
+  },
+  "data": {
+    "[VARIABLE A METTRE ICI EN FONCTION DU NOM DES CALQUES]": {
+      "mbtiles": "[NOM DES FICHIERS DE DONNEES DE FOND DE CARTE QUI SE TROUVENT DANS LE DOSSIER].mbtiles"
+    }
+  }
+}
+
+La subtilité du fichier config.json, c'est qu'il faut générer des parties en fonction du nombre de fichier, ce n'est pas un fichier à compléter, mais il est à générer dynamiquement.
+
+Attention, seul les fichier .mbtiles sont généré via le serveur nodejs du backend. Le reste n'a pas besoin d'un serveur backend
