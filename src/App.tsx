@@ -1,5 +1,5 @@
 import './app-style-refactor.css';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { v4 as uuidv4 } from 'uuid';
 import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
@@ -33,7 +33,7 @@ function readFileAsText(file: File): Promise<string> {
 function App() {
   // Fond de carte dynamique selon le thème
   const getTileUrl = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'https://tiles.stadiamaps.com/tiles/alidade_dark/{z}/{x}/{y}{r}.png'
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
     : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
   const [tileUrl, setTileUrl] = useState(getTileUrl());
   useEffect(() => {
@@ -101,8 +101,8 @@ function App() {
     else if (category === 'fond') namePrompt = 'Nom du nouveau fond de carte ?';
     const name = prompt(namePrompt) ||
       (category === 'salles' ? `Salle ${layers.filter(l => l.info.category === category).length + 1}` :
-      category === 'chemin' ? `Chemin ${layers.filter(l => l.info.category === category).length + 1}` :
-      `Fond ${layers.filter(l => l.info.category === category).length + 1}`);
+        category === 'chemin' ? `Chemin ${layers.filter(l => l.info.category === category).length + 1}` :
+          `Fond ${layers.filter(l => l.info.category === category).length + 1}`);
 
     if (category === 'salles') {
       // Crée aussi un calque chemin et fond de carte avec le même nom
@@ -247,7 +247,7 @@ function App() {
         }
       }
     }
-    const content = await zip.generateAsync({type: 'blob'});
+    const content = await zip.generateAsync({ type: 'blob' });
     const url = window.URL.createObjectURL(content);
     const a = document.createElement('a');
     a.href = url;
@@ -308,16 +308,16 @@ function App() {
       prevLayers.map(l =>
         l.info.id === layerId
           ? {
-              ...l,
-              data: {
-                ...l.data,
-                features: l.data.features.map((f, i) =>
-                  i === featureIdx
-                    ? { ...f, properties: { ...f.properties, name: newName } }
-                    : f
-                ),
-              },
-            }
+            ...l,
+            data: {
+              ...l.data,
+              features: l.data.features.map((f, i) =>
+                i === featureIdx
+                  ? { ...f, properties: { ...f.properties, name: newName } }
+                  : f
+              ),
+            },
+          }
           : l
       )
     );
@@ -327,8 +327,8 @@ function App() {
   function generateOsmFile(cheminLayers: LayerData[]): string {
     let nodeId = -1;
     let wayId = -1;
-    const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string|number> }[] = [];
-    const ways: { id: number; nodeRefs: number[]; tags: Record<string, string|number> }[] = [];
+    const nodes: { id: number; lat: number; lon: number; tags?: Record<string, string | number> }[] = [];
+    const ways: { id: number; nodeRefs: number[]; tags: Record<string, string | number> }[] = [];
     const nodeMap = new Map<string, number>();
     cheminLayers.forEach((layer, layerIdx) => {
       (layer.data.features || []).forEach(feature => {
@@ -378,9 +378,12 @@ function App() {
     return xml;
   }
 
+  // Ref pour l'input ZIP
+  const zipInputRef = React.createRef<HTMLInputElement>();
+
   // --- RENDER ---
   return (
-// ...existing code...
+    // ...existing code...
     <div className="app-root">
       {/* Panneau latéral */}
       <div className="app-sidebar">
@@ -388,10 +391,21 @@ function App() {
           {/* Import ZIP global */}
           <div className="app-section">
             <label className="app-section-label">Importer un ZIP :</label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <input type="file" accept=".zip,application/zip" style={{ display: 'none' }} onChange={handleImportZip} />
-              <button className="btn">📦 Import ZIP</button>
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                ref={zipInputRef}
+                type="file"
+                accept=".zip,application/zip"
+                style={{ display: 'none' }}
+                onChange={handleImportZip}
+              />
+              <button
+                className="btn"
+                onClick={() => zipInputRef.current?.click()}
+              >
+                📦 Import ZIP
+              </button>
+            </div>
           </div>
           <LayerManager
             layers={layers}
@@ -408,7 +422,7 @@ function App() {
             <label className="app-section-label">Images de fond :</label>
             <input type="file" accept="image/png,image/jpeg" onChange={handleImageFondUpload} />
             {imagesFond.length > 0 && (
-          <div className="app-image-list panel">
+              <div className="app-image-list panel">
                 {imagesFond.map(img => (
                   <div key={img.id} className="app-image-item">
                     <span className="app-image-name">{img.url.split('/').pop()}</span>
@@ -440,20 +454,20 @@ function App() {
           <div className="app-section">
             <div className="app-section-label">Export :</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button 
+              <button
                 onClick={() => {
                   const name = prompt("Nom de l'établissement :");
                   if (name?.trim()) handleExport(null, name);
-                }} 
+                }}
                 className="btn btn-primary"
               >
                 Tout exporter
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setCustomExport(true);
                   setShowExportModal(true);
-                }} 
+                }}
                 className="btn"
               >
                 Export personnalisé
