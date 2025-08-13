@@ -15,6 +15,7 @@ import JSZip from 'jszip';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
+import MapTilerVectorLayer from './components/MapTilerVectorLayer';
 
 export type LayerData = {
   info: LayerInfo;
@@ -31,14 +32,18 @@ function readFileAsText(file: File): Promise<string> {
 }
 
 function App() {
-  // Fond de carte dynamique selon le thème
-  const getTileUrl = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const [tileUrl, setTileUrl] = useState(getTileUrl());
+  // Fond de carte MapTiler vectoriel (clé API à personnaliser)
+  const mapTilerApiKey = 'BiyHHi8FTQZ233ADqskZ';
+  const [mapTilerStyle, setMapTilerStyle] = useState(
+    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dataviz-dark'
+      : 'basic'
+  );
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => setTileUrl(getTileUrl());
+    const handler = () => {
+      setMapTilerStyle(mq.matches ? 'dataviz-dark' : 'basic');
+    };
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
@@ -565,12 +570,9 @@ function App() {
       )}
       {/* Carte plein écran */}
       <div className="app-main">
-        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} className="app-map-container">
-          {/* Fond de carte OSM qui s'adapte au thème */}
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url={tileUrl}
-          />
+        <MapContainer center={[48.8588443, 2.2943506]} zoom={13} maxZoom={20} className="app-map-container">
+          {/* Fond de carte vectoriel MapTiler via MapTiler SDK, style dynamique */}
+          <MapTilerVectorLayer apiKey={mapTilerApiKey} style={mapTilerStyle} />
           {/* Images de fond manipulables (DistortableImageList) */}
           <DistortableImageList images={imagesFond} onUpdate={updateImageFond} />
           {/* Affichage des calques dans l'ordre fond < salles < chemin */}
