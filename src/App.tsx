@@ -228,10 +228,53 @@ function App() {
         zip.file(`osrm/${schoolName}/itineraire.osm`, osm);
       }
     }
+    // --- Tileserver-gl structure ---
+    const tileserverRoot = `tileserver-gl/${schoolName}`;
     const mbtilesLayers = layers.filter(l => l.info.category === 'fond');
+    // Génération des styles
     for (let i = 0; i < mbtilesLayers.length; i++) {
       if (options.mbtiles[i]) {
         const layer = mbtilesLayers[i];
+        // Génération du style.json
+        const styleJson = {
+          version: 8,
+          name: layer.info.name,
+          sources: {
+            'custom-tiles': {
+              type: 'vector',
+              url: `mbtiles://${layer.info.name}`
+            }
+          },
+          layers: [
+            {
+              id: 'background',
+              type: 'background',
+              paint: { 'background-color': '#ffffff00' }
+            },
+            {
+              id: 'bg-fill',
+              type: 'fill',
+              source: 'custom-tiles',
+              'source-layer': 'bg',
+              paint: {
+                'fill-color': '#ffffff',
+                'fill-opacity': 1
+              }
+            },
+            {
+              id: 'bg-outline',
+              type: 'line',
+              source: 'custom-tiles',
+              'source-layer': 'bg',
+              paint: {
+                'line-color': '#4e4e4e',
+                'line-width': 4
+              }
+            }
+          ]
+        };
+        zip.file(`${tileserverRoot}/styles/${layer.info.name}/style.json`, JSON.stringify(styleJson, null, 2));
+        // Ajout du fichier mbtiles
         try {
           const formData = new FormData();
           formData.append('geojson', new Blob([JSON.stringify(layer.data)], { type: 'application/json' }));
@@ -241,12 +284,45 @@ function App() {
           });
           if (!res.ok) throw new Error('Erreur serveur');
           const blob = await res.blob();
-          zip.file(`mbtiles/${schoolName}/${layer.info.name}.mbtiles`, blob);
+          zip.file(`${tileserverRoot}/${layer.info.name}.mbtiles`, blob);
         } catch (e) {
           alert(`Erreur export MBTiles ${layer.info.name}: ${e instanceof Error ? e.message : e}`);
         }
       }
     }
+    // Génération du config.json
+    const configJson: {
+      options: {
+        paths: { fonts: string; styles: string }
+      },
+      styles: { [key: string]: any },
+      data: { [key: string]: any }
+    } = {
+      options: {
+        paths: {
+          fonts: 'fonts',
+          styles: 'styles'
+        }
+      },
+      styles: {},
+      data: {}
+    };
+    for (let i = 0; i < mbtilesLayers.length; i++) {
+      if (options.mbtiles[i]) {
+        const layer = mbtilesLayers[i];
+        configJson.styles[layer.info.name] = {
+          style: `${layer.info.name}/style.json`,
+          tilejson: {
+            type: 'overlay',
+            bounds: [8.529446, 47.364758, 8.55232, 47.380539]
+          }
+        };
+        configJson.data[layer.info.name] = {
+          mbtiles: `${layer.info.name}.mbtiles`
+        };
+      }
+    }
+    zip.file(`${tileserverRoot}/config.json`, JSON.stringify(configJson, null, 2));
     const content = await zip.generateAsync({ type: 'blob' });
     const url = window.URL.createObjectURL(content);
     const a = document.createElement('a');
