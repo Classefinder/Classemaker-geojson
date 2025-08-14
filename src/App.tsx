@@ -15,6 +15,8 @@ import JSZip from 'jszip';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import './App.css';
+import useUndoHotkeys from './utils/useUndoHotkeys';
+import { useUndo } from './utils/useUndo';
 import MapTilerVectorLayer from './components/MapTilerVectorLayer';
 
 export type LayerData = {
@@ -48,17 +50,49 @@ function App() {
     return () => mq.removeEventListener('change', handler);
   }, []);
   const initialLayerId = uuidv4();
-  const [layers, setLayers] = useState<LayerData[]>([
-    {
-      info: { id: initialLayerId, name: 'Salle 1', visible: true, category: 'salles', features: [] },
-      data: { type: 'FeatureCollection', features: [] },
-    },
-  ]);
-  const [activeLayerId, setActiveLayerId] = useState<string | null>(initialLayerId);
-  const [selectedFeature, setSelectedFeature] = useState<{ layerId: string; featureIdx: number } | null>(null);
+  // Undo manager pour layers, imagesFond, activeLayerId, selectedFeature
+  const undoState = useUndo<{
+    layers: LayerData[];
+    activeLayerId: string | null;
+    selectedFeature: { layerId: string; featureIdx: number } | null;
+    imagesFond: DistortableImageData[];
+  }>({
+    layers: [
+      {
+        info: { id: initialLayerId, name: 'Salle 1', visible: true, category: 'salles', features: [] },
+        data: { type: 'FeatureCollection', features: [] },
+      },
+    ],
+    activeLayerId: initialLayerId,
+    selectedFeature: null,
+    imagesFond: [],
+  });
   const [showExportModal, setShowExportModal] = useState(false);
   const [customExport, setCustomExport] = useState(false);
-  const [imagesFond, setImagesFond] = useState<DistortableImageData[]>([]);
+  // Accès aux états undo
+  const { layers, activeLayerId, selectedFeature, imagesFond } = undoState.get();
+  // Setters qui enregistrent dans l'historique
+  const setLayers = (fn: (prev: LayerData[]) => LayerData[]) => {
+    const state = undoState.get();
+    undoState.set({ ...state, layers: fn(state.layers) });
+  };
+  const setActiveLayerId = (id: string | null) => {
+    const state = undoState.get();
+    undoState.set({ ...state, activeLayerId: id });
+  };
+  const setSelectedFeature = (sf: { layerId: string; featureIdx: number } | null) => {
+    const state = undoState.get();
+    undoState.set({ ...state, selectedFeature: sf });
+  };
+  const setImagesFond = (fn: (prev: DistortableImageData[]) => DistortableImageData[]) => {
+    const state = undoState.get();
+    undoState.set({ ...state, imagesFond: fn(state.imagesFond) });
+  };
+  // Undo/Redo
+  const handleUndo = () => { undoState.undo(); };
+  const handleRedo = () => { if (undoState.redo) undoState.redo(); };
+  // Hotkeys
+  useUndoHotkeys({ onUndo: handleUndo, onRedo: handleRedo });
   // Handlers images de fond
   const handleImageFondUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,7 +124,7 @@ function App() {
   };
   const handleAttributeChange = (props: Record<string, any>) => {
     if (!selectedFeature) return;
-    setLayers((prevLayers: LayerData[]) => prevLayers.map((l) => {
+    setLayers(prev => prev.map((l) => {
       if (l.info.id !== selectedFeature.layerId) return l;
       const features = l.data.features.map((f: GeoJSON.Feature, i: number) => i === selectedFeature.featureIdx ? { ...f, properties: props } : f);
       return { ...l, data: { ...l.data, features } };
@@ -126,7 +160,7 @@ function App() {
         info: { id: fondId, name, visible: true, category: 'fond', features: [] },
         data: { type: 'FeatureCollection', features: [] },
       };
-      setLayers([...layers, salleLayer, cheminLayer, fondLayer]);
+      setLayers(prev => [...prev, salleLayer, cheminLayer, fondLayer]);
       setActiveLayerId(salleId);
     } else {
       const newId = uuidv4();
@@ -134,28 +168,28 @@ function App() {
         info: { id: newId, name, visible: true, category, features: [] },
         data: { type: 'FeatureCollection', features: [] },
       };
-      setLayers([...layers, newLayer]);
+      setLayers(prev => [...prev, newLayer]);
       setActiveLayerId(newId);
     }
   };
   const removeLayer = (id: string) => {
-    setLayers(layers.filter((l: LayerData) => l.info.id !== id));
+    setLayers(prev => prev.filter((l: LayerData) => l.info.id !== id));
     if (activeLayerId === id && layers.length > 1) {
       setActiveLayerId(layers.find(l => l.info.id !== id)?.info.id || null);
     }
   };
   const renameLayer = (id: string, name: string) => {
-    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, name } } : l));
+    setLayers(prev => prev.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, name } } : l));
   };
   const setLayerOpacity = (id: string, opacity: number) => {
-    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, opacity } } : l));
+    setLayers(prev => prev.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, opacity } } : l));
   };
   const toggleLayer = (id: string) => {
-    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, visible: !l.info.visible } } : l));
+    setLayers(prev => prev.map((l: LayerData) => l.info.id === id ? { ...l, info: { ...l.info, visible: !l.info.visible } } : l));
   };
   const selectLayer = (id: string) => setActiveLayerId(id);
   const updateLayerData = (id: string, data: GeoJSON.FeatureCollection) => {
-    setLayers(layers.map((l: LayerData) => l.info.id === id ? { ...l, data } : l));
+    setLayers(prev => prev.map((l: LayerData) => l.info.id === id ? { ...l, data } : l));
   };
 
   // Import ZIP global
@@ -385,8 +419,8 @@ function App() {
 
   // updateFeatureName
   const updateFeatureName = (layerId: string, featureIdx: number, newName: string) => {
-    setLayers(prevLayers =>
-      prevLayers.map(l =>
+    setLayers(prev =>
+      prev.map(l =>
         l.info.id === layerId
           ? {
             ...l,
@@ -594,6 +628,7 @@ function App() {
                 highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
                 category={l.info.category}
                 opacity={l.info.opacity ?? 1}
+                onUndo={handleUndo}
               />
             ))}
         </MapContainer>

@@ -17,9 +17,10 @@ interface GeoJsonDrawLayerProps {
   highlight?: number; // index de la feature à surligner
   category?: LayerCategory;
   opacity?: number;
+  onUndo?: () => void;
 }
 
-const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight, category, opacity }) => {
+const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, active, visible, onFeatureClick, allLayersData, highlight, category, opacity, onUndo }) => {
   const fgRef = useRef<LeafletFeatureGroup>(null);
   const map = useMap();
 
