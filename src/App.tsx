@@ -1,6 +1,6 @@
 import './app-style-refactor.css';
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer } from 'react-leaflet';
 import { v4 as uuidv4 } from 'uuid';
 import GeoJsonDrawLayer from './components/GeoJsonDrawLayer';
 import LayerManager from './components/LayerManager';
@@ -628,7 +628,7 @@ function App() {
                 highlight={selectedFeature && l.info.id === selectedFeature.layerId ? selectedFeature.featureIdx : undefined}
                 category={l.info.category}
                 opacity={l.info.opacity ?? 1}
-                onUndo={handleUndo}
+              // ...existing code...
               />
             ))}
         </MapContainer>
