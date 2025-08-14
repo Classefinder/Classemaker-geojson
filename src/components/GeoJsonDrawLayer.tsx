@@ -40,24 +40,24 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
   // Gestion du contrôle de dessin
   useEffect(() => {
     if (!active || !fgRef.current) return;
-    // Outils selon la catégorie
+    // Outils selon la catégorie (rectangle toujours désactivé)
     let drawOptions: any = {
       polygon: false,
       polyline: false,
-      rectangle: false,
+      rectangle: false, // rectangle jamais activé
       marker: false,
       circle: false,
       circlemarker: false,
     };
     if (category === 'salles') {
       drawOptions.polygon = {};
-      drawOptions.rectangle = {};
+      // drawOptions.rectangle = {};
     } else if (category === 'chemin') {
       drawOptions.polyline = {};
     } else if (category === 'fond') {
       drawOptions.polygon = {};
       drawOptions.polyline = {};
-      drawOptions.rectangle = {};
+      // drawOptions.rectangle = {};
     }
     const drawControl = new L.Control.Draw({
       edit: { featureGroup: fgRef.current, remove: false },
@@ -74,19 +74,19 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
         const allFeatures: GeoJSON.Feature[] = (allLayersData || []).flatMap(fc => fc.features);
         let features: GeoJSON.Feature[] = allFeatures;
         // Récupère tous les sommets existants du réseau
-        let allPoints: {coord: [number, number], featureIdx: number, segIdx?: number}[] = [];
-        let allSegments: {a: [number, number], b: [number, number], featureIdx: number, segIdx: number}[] = [];
+        let allPoints: { coord: [number, number], featureIdx: number, segIdx?: number }[] = [];
+        let allSegments: { a: [number, number], b: [number, number], featureIdx: number, segIdx: number }[] = [];
         features.forEach((f, i) => {
           if (f.geometry.type === 'LineString') {
             const coords = f.geometry.coordinates as [number, number][];
             coords.forEach((c, j) => {
-              allPoints.push({coord: c, featureIdx: i, segIdx: j});
+              allPoints.push({ coord: c, featureIdx: i, segIdx: j });
             });
             for (let j = 0; j < coords.length - 1; j++) {
-              allSegments.push({a: coords[j], b: coords[j+1], featureIdx: i, segIdx: j});
+              allSegments.push({ a: coords[j], b: coords[j + 1], featureIdx: i, segIdx: j });
             }
           } else if (f.geometry.type === 'Point') {
-            allPoints.push({coord: f.geometry.coordinates as [number, number], featureIdx: i});
+            allPoints.push({ coord: f.geometry.coordinates as [number, number], featureIdx: i });
           }
         });
         let newCoords = e.layer.getLatLngs().map((latlng: any) => [latlng.lng, latlng.lat]);
@@ -103,7 +103,7 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
             allPoints.forEach(pt => {
               const dx = pt.coord[0] - newCoords[extIdx][0];
               const dy = pt.coord[1] - newCoords[extIdx][1];
-              const dist = Math.sqrt(dx*dx + dy*dy);
+              const dist = Math.sqrt(dx * dx + dy * dy);
               if (dist < minDist) {
                 minDist = dist;
                 closest = pt.coord;
@@ -122,12 +122,12 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
               const [x2, y2] = seg.b;
               const dx = x2 - x1;
               const dy = y2 - y1;
-              const len2 = dx*dx + dy*dy;
+              const len2 = dx * dx + dy * dy;
               if (len2 === 0) return;
-              const t = ((x-x1)*dx + (y-y1)*dy) / len2;
+              const t = ((x - x1) * dx + (y - y1) * dy) / len2;
               const tClamped = Math.max(0, Math.min(1, t));
-              const proj = [x1 + tClamped*dx, y1 + tClamped*dy];
-              const dist = Math.sqrt((proj[0]-x)**2 + (proj[1]-y)**2);
+              const proj = [x1 + tClamped * dx, y1 + tClamped * dy];
+              const dist = Math.sqrt((proj[0] - x) ** 2 + (proj[1] - y) ** 2);
               if (dist < minSegDist) {
                 minSegDist = dist;
                 segProj = proj;
@@ -158,7 +158,7 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
                 const f = features[snapFeatureIdx];
                 if (f.geometry.type === 'LineString') {
                   const coords = f.geometry.coordinates as [number, number][];
-                  coords.splice(snapSegIdx+1, 0, snapCoord);
+                  coords.splice(snapSegIdx + 1, 0, snapCoord);
                   f.geometry.coordinates = coords;
                 }
               }
@@ -260,7 +260,7 @@ const GeoJsonDrawLayer: React.FC<GeoJsonDrawLayerProps> = ({ data, onChange, act
     {category === 'chemin' && (
       <button
         className={`btn draw-snapping-btn ${snapping ? 'draw-snapping-btn-on' : ''}`}
-        onClick={()=>setSnapping(s=>!s)}
+        onClick={() => setSnapping(s => !s)}
         title={snapping ? 'Désactiver le mode aimant' : 'Activer le mode aimant'}
       >
         {snapping ? 'Aimant : ON' : 'Aimant : OFF'}
