@@ -317,7 +317,7 @@ function App() {
         try {
           const formData = new FormData();
           formData.append('geojson', new Blob([JSON.stringify(layer.data)], { type: 'application/json' }));
-          const res = await fetch('http://localhost:3001/export-pbf', {
+          const res = await fetch('/api/export-pbf', {
             method: 'POST',
             body: formData,
           });

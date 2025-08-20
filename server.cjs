@@ -10,7 +10,7 @@ const app = express();
 const upload = multer({ dest: os.tmpdir() });
 
 // Endpoint pour convertir GeoJSON en MBTiles uniquement
-app.post('/export-pbf', upload.single('geojson'), async (req, res) => {
+app.post('/api/export-pbf', upload.single('geojson'), async (req, res) => {
   const geojsonPath = req.file.path;
   const mbtilesPath = geojsonPath + '.mbtiles';
 
@@ -21,7 +21,7 @@ app.post('/export-pbf', upload.single('geojson'), async (req, res) => {
         fs.rmSync(geojsonPath, { force: true });
         return res.status(500).send('Erreur Tippecanoe');
       }
-      
+
       // Envoie directement le fichier mbtiles
       res.download(mbtilesPath, 'tiles.mbtiles', (err) => {
         // Nettoyage fichiers temporaires
