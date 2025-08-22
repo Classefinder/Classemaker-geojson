@@ -20,7 +20,7 @@ app.post(`${BASE_PATH}/export-pbf`, upload.single('geojson'), async (req, res) =
   const mbtilesPath = geojsonPath + '.mbtiles';
 
   // Tippecanoe: GeoJSON -> MBTiles
-  exec(`tippecanoe -o ${mbtilesPath} -zg --drop-densest-as-needed --force ${geojsonPath}`,
+  exec(`tippecanoe -o ${mbtilesPath} -Z5 -z25 --layer=bg --drop-densest-as-needed --force ${geojsonPath}`,
     (err) => {
       if (err) {
         fs.rmSync(geojsonPath, { force: true });
