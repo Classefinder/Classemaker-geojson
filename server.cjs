@@ -9,8 +9,13 @@ const os = require('os');
 const app = express();
 const upload = multer({ dest: os.tmpdir() });
 
+// Base path configurable to avoid conflicts with other services (e.g. nginx using /api)
+// Set API_BASE_PATH in the environment to change it (no trailing slash). Default: /export
+const BASE_PATH = (process.env.API_BASE_PATH || '/export').replace(/\/+$|^\s+|\s+$/g, '');
+
 // Endpoint pour convertir GeoJSON en MBTiles uniquement
-app.post('/api/export-pbf', upload.single('geojson'), async (req, res) => {
+// Final route: <BASE_PATH>/export-pbf
+app.post(`${BASE_PATH}/export-pbf`, upload.single('geojson'), async (req, res) => {
   const geojsonPath = req.file.path;
   const mbtilesPath = geojsonPath + '.mbtiles';
 
@@ -32,5 +37,5 @@ app.post('/api/export-pbf', upload.single('geojson'), async (req, res) => {
 });
 
 app.listen(3001, () => {
-  console.log('Export PBF server listening on port 3001');
+  console.log(`Export PBF server listening on port 3001, base path: "${BASE_PATH}"`);
 });

@@ -270,6 +270,12 @@ function App() {
     // --- Tileserver-gl structure ---
     const tileserverRoot = `tileserver-gl/${schoolName}`;
     const mbtilesLayers = layers.filter(l => l.info.category === 'fond');
+    // Build API base path from Vite env so frontend matches the backend configurable path
+    // VITE_API_BASE_PATH example values: '/export' (default), '/', '/tiles'
+    let _rawApiBase = import.meta.env.VITE_API_BASE_PATH ?? '/export';
+    // Normalize: '' or '/' -> empty base (so URL becomes '/export-pbf'), otherwise ensure leading slash and no trailing slash
+    let apiBase = (_rawApiBase === '/' || _rawApiBase === '') ? '' : _rawApiBase.replace(/\/+$/g, '');
+    if (apiBase && !apiBase.startsWith('/')) apiBase = '/' + apiBase;
     // Génération des styles
     for (let i = 0; i < mbtilesLayers.length; i++) {
       if (options.mbtiles[i]) {
@@ -317,7 +323,8 @@ function App() {
         try {
           const formData = new FormData();
           formData.append('geojson', new Blob([JSON.stringify(layer.data)], { type: 'application/json' }));
-          const res = await fetch('/api/export-pbf', {
+          const exportUrl = `${apiBase}/export-pbf`;
+          const res = await fetch(exportUrl, {
             method: 'POST',
             body: formData,
           });
