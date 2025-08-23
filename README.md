@@ -1,69 +1,58 @@
-# React + TypeScript + Vite
+# Création des fichiers de données
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Deux solutions sont possibles pour créer les fichiers nécessaires à **Classefinder** :
 
-Currently, two official plugins are available:
+1. **Un petit logiciel web dédié** : minimaliste, conçu uniquement pour Classefinder.
+2. **QGIS** : un logiciel SIG complet, plus puissant mais plus complexe à prendre en main.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 1. Les fichiers attendus par Classefinder
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Classefinder utilise plusieurs fichiers pour fonctionner correctement :
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Salles (.geojson)**
+    
+    Contient les polygones représentant les salles de chaque étage.
+    
+    Chaque salle doit avoir un **nom unique** (exemple : *115*).
+    
+- **Chemins (.geojson)**
+    
+    Contient uniquement des **segments invisibles** servant à positionner les points de départ/arrivée des itinéraires.
+    
+    ⚠️ Contrairement au fichier **.osm**, ce calque n’est **pas un vrai réseau de chemins** : les segments ne sont pas forcément reliés entre eux, ils servent seulement de points d’ancrage.
+    
+    Chaque segment doit avoir **exactement le même nom que la salle correspondante** (exemple : un segment nommé *115* pour la salle *115*).
+    
+    → C’est grâce à cette correspondance que Classefinder peut calculer un itinéraire vers la bonne salle.
+    
+- **Carte de fond (optionnel)**
+    - Un fichier **.mbtiles** + son fichier **style.json** pour l’affichage du fond de carte.
+- **Chemins réels (.osm)**
+    
+    Utilisés par le moteur de routage (**OSRM**) pour le calcul des trajets dans le bâtiment.
+    
+    Ce fichier contient l’ensemble du réseau de circulation (escaliers, couloirs, etc.).
+    
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 2. Règles importantes pour le calque “Chemins”
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Le **point de départ** des itinéraires se place **sur un segment du calque “Chemins”**.
+- Chaque salle doit avoir **un segment associé**, avec le **même nom**.
+- Les segments de liaison (par ex. couloirs) peuvent être laissés **sans nom**, ce n’est pas bloquant.
+- Le bouton **“aimant”** permet de connecter facilement plusieurs segments entre eux si besoin.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 3. Connexion entre étages
+
+Pour permettre la navigation multi-étages :
+
+- Il faut créer des **segments de liaison** entre les étages (par exemple via des escaliers).
+- Ces segments doivent être configurés d’une certaine manière pour que le rendu soit correct.
+- Même si le visuel n’est pas parfait, la navigation reste fonctionnelle.
+
+*(Des illustrations seront ajoutées ici pour clarifier la méthode.)*
